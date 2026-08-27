@@ -4,68 +4,55 @@ An enterprise-grade, offline-first, multi-tenant school transport management pla
 
 ---
 
-## ⚡ Quick Start (Staging Deployment)
+## ⚡ Quick Demo Launch (اجرای فوری دمو با یک دستور)
 
-To run the complete production-grade stack (PostgreSQL Primary + Replica, Redis, LocalStack S3, Nginx, Backend API, and Outbox Worker) locally:
+برای اجرای کامل استک دمو همراه با پایگاه داده، ردیس، داشبورد مدرسه و پنل سوپر ادمین تنها کافیست دستور زیر را اجرا کنید:
 
 ```bash
-# 1. Clone repository
+# 1. کلون ریپازیتوری
 git clone https://github.com/mytest19861986/sch-srv-anti.git
 cd sch-srv-anti
 
-# 2. Execute one-command staging deployment
-./scripts/deploy-staging.sh
+# 2. اجرای تک‌دستوری دمو
+./demo.sh
 ```
 
-### Accessing Endpoints & Applications
-- 🌐 **API Gateway (Nginx)**: [http://localhost:80](http://localhost:80)
-- 🚀 **Backend API Direct**: [http://localhost:3000](http://localhost:3000)
-- 🏫 **School Web Dashboard**: [http://localhost:3001](http://localhost:3001)
-- ⚙️ **Super Admin Web Dashboard**: [http://localhost:3002](http://localhost:3002)
+### 📱 درگاه‌های دسترسی به وب و API:
+- 🏫 **داشبورد مدیریت مدرسه**: [http://localhost:3001](http://localhost:3001)
+- 🏢 **پنل راهبری Super Admin**: [http://localhost:3002](http://localhost:3002)
+- 🛡️ **درگاه ارتباطی Nginx**: [http://localhost:80](http://localhost:80)
+- 🚀 **سرویس مستقیم Backend API**: [http://localhost:3000](http://localhost:3000)
+
+### 🔑 اطلاعات ورود کاربران دمو (فقط محیط لوکال):
+
+| نقش کاربری | نام کاربری (Email) | کلمه عبور |
+| :--- | :--- | :--- |
+| 🛡️ **Super Admin** | `super-admin@platform.ir` | `Demo@1234` |
+| 🏫 **مدیر مدرسه (School Admin)** | `school-admin@demo.ir` | `Demo@1234` |
+| 🚐 **راننده سرویس (Driver)** | `driver@demo.ir` | `Demo@1234` |
+| 👨‍👩‍👧 **ولی دانش‌آموز (Parent)** | `parent@demo.ir` | `Demo@1234` |
 
 ---
 
-## 🏗️ Architecture & Component Topology
-
-```mermaid
-graph TD
-    DriverApp["📱 Driver Android App<br/>(Offline-First / Room / Compose)"] -->|100 r/s Burst /sync/batch| Nginx["🛡️ Nginx Load Balancer<br/>(Smart Rate Limiting)"]
-    ParentApp["📱 Parent Android App<br/>(Live Status / Deep Link)"] -->|Live Timeline / FCM| Nginx
-    SchoolWeb["💻 School Web Dashboard<br/>(Next.js 14 / StaleDataBanner)"] -->|REST / Read Replica| Nginx
-    SuperAdminWeb["🏢 Super Admin Dashboard<br/>(Tenant CRUD / Audit Logs)"] -->|REST| Nginx
-
-    Nginx --> BackendAPI["⚡ Backend API Cluster (Fastify/Bun)"]
-    BackendAPI -->|Write: Events & Outbox| PGPrimary[("🗄️ PostgreSQL 16 Primary")]
-    BackendAPI -->|Read: Overview & Manifest| PGReplica[("📖 PostgreSQL Read Replica")]
-    BackendAPI -->|Hot Cache & Rate Limits| Redis[("⚡ Redis 7 Cache")]
-    
-    PGPrimary -.->|Streaming Replication| PGReplica
-    PGPrimary --> OutboxWorker["⚙️ Transactional Outbox Worker"]
-    OutboxWorker -->|FCM Push Notification| ParentApp
-```
-
----
-
-## 🧪 Testing & Verification
-
-Run the comprehensive test suite across all layers:
+## 🧪 تست و اعتبارسنجی خودکار
 
 ```bash
-# Run backend integration tests (52 tests)
+# اجرای تست‌های اعتبارسنجی دمو و لاگین واقعی
+bun test tests/e2e/demo-verification.test.ts
+
+# اجرای تمامی آزمون‌های سرتاسری E2E (۸ سناریو)
+bun test tests/e2e/e2e-scenarios.test.ts
+
+# اجرای آزمون‌های یکپارچگی بک‌اند (۵۲ تست)
 bun test services/backend-api
 
-# Run shared web packages tests (7 tests)
+# اجرای آزمون‌های مونو‌ریپو و پکیج‌های وب (۷ تست)
 bun test packages/i18n packages/auth packages/api-client
-
-# Run full end-to-end integration tests (8 scenarios)
-bun test tests/e2e
 ```
 
 ---
 
-## 📚 Complete Documentation
-- 📖 [Architecture Invariants & ADRs](docs/ARCHITECTURE.md)
-- 🔐 [Security & Zero-Trust Guidelines](docs/SECURITY.md)
-- 🔌 [Production Wire-up Guide](docs/WIRE_UP_GUIDE.md)
-- 📋 [Final Handoff Checklist](docs/HANDOFF_CHECKLIST.md)
-- 🚀 [Deployment & Runbooks](docs/DEPLOYMENT.md)
+## 📚 مستندات کامل پلتفرم
+- 📖 [راهنمای جامع اتصال اعتبارنامه‌ها (Wire-Up Guide)](docs/WIRE_UP_GUIDE.md)
+- 📋 [چک‌لیست تحویل نهایی پلتفرم (Handoff Checklist)](docs/HANDOFF_CHECKLIST.md)
+- 🚀 [مستندات استقرار و SRE Runbooks](docs/DEPLOYMENT.md)
