@@ -13,6 +13,7 @@ import { DashboardService } from './modules/dashboard/dashboard.service.js';
 import { dashboardController } from './modules/dashboard/dashboard.controller.js';
 import { ParentService } from './modules/parent/parent.service.js';
 import { parentController } from './modules/parent/parent.controller.js';
+import { InMemoryDeviceTokenRepository } from './modules/parent/device-token.service.js';
 import { AuditService } from './modules/super-admin/audit.service.js';
 import { SuperAdminService } from './modules/super-admin/super-admin.service.js';
 import { superAdminController } from './modules/super-admin/super-admin.controller.js';
@@ -28,6 +29,7 @@ export interface AppOptions {
   syncService?: SyncService;
   dashboardService?: DashboardService;
   parentService?: ParentService;
+  deviceTokenRepository?: InMemoryDeviceTokenRepository;
   auditService?: AuditService;
   superAdminService?: SuperAdminService;
   startWorker?: boolean;
@@ -40,6 +42,7 @@ export function buildApp(opts: AppOptions = {}): {
   attendanceRepository: IAttendanceRepository;
   userRepository: InMemoryUserRepository;
   domainRepository: InMemoryDomainRepository;
+  deviceTokenRepository: InMemoryDeviceTokenRepository;
   queueService: IOutboxQueueService;
   notificationService: NotificationService;
   outboxWorker: OutboxWorkerService;
@@ -60,7 +63,9 @@ export function buildApp(opts: AppOptions = {}): {
   registerTracingMiddleware(app);
 
   const domainRepository = opts.domainRepository ?? new InMemoryDomainRepository();
-  const attendanceRepository = opts.attendanceRepository ?? new InMemoryAttendanceRepository();
+  const auditService = opts.auditService ?? new AuditService();
+  const attendanceRepository =
+    opts.attendanceRepository ?? new InMemoryAttendanceRepository(undefined, auditService);
   const queueService =
     opts.queueService ??
     (attendanceRepository as InMemoryAttendanceRepository).queueService ??
@@ -71,12 +76,12 @@ export function buildApp(opts: AppOptions = {}): {
   }
 
   const userRepository = opts.userRepository ?? new InMemoryUserRepository();
-  const auditService = opts.auditService ?? new AuditService();
+  const deviceTokenRepository = opts.deviceTokenRepository ?? new InMemoryDeviceTokenRepository();
 
   const authService = new AuthService(userRepository);
   const attendanceService = new AttendanceService(attendanceRepository);
   const syncService = opts.syncService ?? new SyncService(attendanceRepository);
-  const notificationService = new NotificationService(domainRepository);
+  const notificationService = new NotificationService(domainRepository, deviceTokenRepository);
   const dashboardService = opts.dashboardService ?? new DashboardService(domainRepository, attendanceRepository);
   const parentService = opts.parentService ?? new ParentService(domainRepository, attendanceRepository, notificationService);
   const superAdminService = opts.superAdminService ?? new SuperAdminService(auditService, userRepository, authService, domainRepository, attendanceRepository);
@@ -114,8 +119,8 @@ export function buildApp(opts: AppOptions = {}): {
     prefix: '/api/v1/dashboard'
   });
 
-  // Register Parent Module
-  app.register(parentController(parentService, authService), {
+  // Register Parent Module with Device Token endpoints
+  app.register(parentController(parentService, authService, deviceTokenRepository), {
     prefix: '/api/v1/parent'
   });
 
@@ -135,6 +140,7 @@ export function buildApp(opts: AppOptions = {}): {
     attendanceRepository,
     userRepository,
     domainRepository,
+    deviceTokenRepository,
     queueService,
     notificationService,
     outboxWorker,

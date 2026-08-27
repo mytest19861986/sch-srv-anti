@@ -13,7 +13,7 @@ export function attendanceController(
   domainRepo: InMemoryDomainRepository
 ) {
   const authenticate = createAuthMiddleware(authService);
-  const driverOrAdminOnly = requireRole('DRIVER', 'SCHOOL_ADMIN', 'SUPER_ADMIN');
+  const driverOrAdminOnly = requireRole('DRIVER', 'SCHOOL_ADMIN', 'SCHOOL_OPERATOR', 'SUPER_ADMIN');
 
   return async function (fastify: FastifyInstance, opts: FastifyPluginOptions) {
     // 1. Attendance Ingestion Endpoint
@@ -38,18 +38,31 @@ export function attendanceController(
         const startTime = performance.now();
         try {
           const tenantId = request.tenantId!;
-          const response = await attendanceService.recordAttendance(parseResult.data, tenantId);
+          const user = request.user!;
+          const response = await attendanceService.recordAttendance(
+            parseResult.data,
+            tenantId,
+            { userId: user.userId, role: user.role }
+          );
           const statusCode = response.is_idempotent_replay ? 200 : 201;
           const duration = performance.now() - startTime;
           metricsService.recordAttendanceWriteSuccess(duration);
           return reply.status(statusCode).send(response);
         } catch (err: any) {
-          metricsService.recordAttendanceWriteError('INGESTION_ERROR');
+          metricsService.recordAttendanceWriteError(err.code || 'INGESTION_ERROR');
+          if (err.statusCode) {
+            return reply.status(err.statusCode).send({
+              success: false,
+              statusCode: err.statusCode,
+              error: err.code || 'ERROR',
+              message: err.message
+            });
+          }
           request.log.error(err);
           return reply.status(500).send({
             success: false,
             error: 'INTERNAL_SERVER_ERROR',
-            message: 'Failed to record attendance event'
+            message: err.message || 'Failed to record attendance event'
           });
         }
       }

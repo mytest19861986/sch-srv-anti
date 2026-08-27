@@ -90,3 +90,4 @@ export class LoggerService {
 }
 
 export const appLogger = new LoggerService('BackendAPI');
+export const logger = appLogger;

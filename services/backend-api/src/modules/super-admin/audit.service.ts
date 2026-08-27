@@ -2,7 +2,7 @@ export interface AuditLogEntry {
   id: string;
   tenantId?: string;
   userId: string;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'ROLE_CHANGE' | 'SETTING_CHANGE';
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'ROLE_CHANGE' | 'SETTING_CHANGE' | 'ATTENDANCE_EVENT_CORRECTED' | string;
   resourceType: string;
   resourceId: string;
   changes?: Record<string, any>;
