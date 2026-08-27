@@ -1,0 +1,43 @@
+{
+  "common": {
+    "appName": "سامانه مدیریت سرویس مدارس",
+    "superAdminTitle": "پنل راهبری سامانه (Super Admin)",
+    "schoolDashboardTitle": "داشبورد مدیریت سرویس مدرسه",
+    "login": "ورود به سیستم",
+    "logout": "خروج",
+    "save": "ذخیره تغییرات",
+    "cancel": "انصراف",
+    "delete": "حذف",
+    "confirm": "تأیید",
+    "refresh": "به‌روزرسانی",
+    "search": "جستجو...",
+    "status": "وضعیت",
+    "actions": "عملیات",
+    "loading": "در حال بارگذاری..."
+  },
+  "dashboard": {
+    "totalStudents": "کل دانش‌آموزان",
+    "pickedUp": "سوار شده (در مسیر)",
+    "droppedOff": "پیاده شده (مقصد)",
+    "pending": "در انتظار",
+    "absent": "غایب",
+    "liveServices": "سرویس‌های در حال حرکت",
+    "routeName": "نام مسیر",
+    "driverName": "راننده",
+    "completionRate": "درصد تکمیل",
+    "lastEvent": "آخرین رویداد",
+    "staleWarning": "توجه: داده‌ها ممکن است کاملاً به‌روز نباشند. آخرین به‌روزرسانی: {seconds} ثانیه پیش",
+    "liveServicesCount": "{count} سرویس فعال"
+  },
+  "superAdmin": {
+    "tenants": "مدیریت مدارس (Tenants)",
+    "users": "مدیریت کاربران و دسترسی‌ها",
+    "auditLogs": "لاگ‌های حسابرسی سیستم",
+    "settings": "تنظیمات پلتفرم",
+    "newTenant": "افزودن مدرسه جدید",
+    "tenantName": "نام مدرسه",
+    "tenantCode": "شناسه سیستمی (Tenant Code)",
+    "roleChange": "تغییر نقش کاربر",
+    "softDeleteWarning": "آیا از غیرفعال‌سازی این مدرسه اطمینان دارید؟ تمامی داده‌ها در وضعیت بایگانی قرار می‌گیرند."
+  }
+}
