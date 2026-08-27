@@ -16,10 +16,12 @@ RUN npm run build || true
 FROM base AS runner
 WORKDIR /app/apps/super-admin-web
 ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV HOSTNAME=0.0.0.0
 ENV PORT=3002
 
 COPY --from=builder /app/packages /app/packages
 COPY --from=builder /app/apps/super-admin-web /app/apps/super-admin-web
 
 EXPOSE 3002
-CMD ["npm", "run", "start", "--", "-p", "3002"]
+CMD ["npx", "next", "start", "-H", "0.0.0.0", "-p", "3002"]

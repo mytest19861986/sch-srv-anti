@@ -79,6 +79,8 @@ services:
       - "3001:3001"
     environment:
       - PORT=3001
+      - HOST=0.0.0.0
+      - HOSTNAME=0.0.0.0
       - NEXT_PUBLIC_API_URL=http://localhost:3000
     networks:
       - backend-net
@@ -103,6 +105,8 @@ services:
       - "3002:3002"
     environment:
       - PORT=3002
+      - HOST=0.0.0.0
+      - HOSTNAME=0.0.0.0
       - NEXT_PUBLIC_API_URL=http://localhost:3000
     networks:
       - backend-net
