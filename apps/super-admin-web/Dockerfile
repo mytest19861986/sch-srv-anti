@@ -15,7 +15,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npx next build
 
 FROM base AS runner
-WORKDIR /app/apps/super-admin-web
+WORKDIR /app
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV HOSTNAME=0.0.0.0
@@ -24,5 +24,6 @@ ENV PATH="/app/node_modules/.bin:/app/apps/super-admin-web/node_modules/.bin:$PA
 
 COPY --from=builder /app /app
 
+WORKDIR /app/apps/super-admin-web
 EXPOSE 3002
-CMD ["next", "start", "-H", "0.0.0.0", "-p", "3002"]
+CMD ["npx", "next", "start", "-H", "0.0.0.0", "-p", "3002"]

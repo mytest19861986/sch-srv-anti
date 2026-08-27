@@ -15,7 +15,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npx next build
 
 FROM base AS runner
-WORKDIR /app/apps/school-web
+WORKDIR /app
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV HOSTNAME=0.0.0.0
@@ -24,5 +24,6 @@ ENV PATH="/app/node_modules/.bin:/app/apps/school-web/node_modules/.bin:$PATH"
 
 COPY --from=builder /app /app
 
+WORKDIR /app/apps/school-web
 EXPOSE 3001
-CMD ["next", "start", "-H", "0.0.0.0", "-p", "3001"]
+CMD ["npx", "next", "start", "-H", "0.0.0.0", "-p", "3001"]

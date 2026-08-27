@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { StaleDataBanner, KpiCard, StatusBadge } from "@school-platform/ui";
 import { fa, toPersianDigits } from "@school-platform/i18n";
 import { DashboardOverviewSummary, LiveServiceItem } from "@school-platform/api-client";
 
 export default function SchoolDashboardPage() {
+  const router = useRouter();
   const [summary, setSummary] = useState<DashboardOverviewSummary>({
     date: "2026-08-27",
     total_students: 145,
@@ -54,8 +56,18 @@ export default function SchoolDashboardPage() {
     }, 600);
   };
 
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
+      router.refresh();
+    } catch {
+      window.location.href = "/login";
+    }
+  };
+
   return (
-    <div className="max-w-7xl mx-auto p-6 md:p-8 space-y-8">
+    <div className="max-w-7xl mx-auto p-6 md:p-8 space-y-8" dir="rtl">
       {/* Header */}
       <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
         <div>
@@ -67,13 +79,22 @@ export default function SchoolDashboardPage() {
           </p>
         </div>
 
-        <button
-          onClick={handleRefresh}
-          disabled={isLoading}
-          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-semibold text-sm transition-all shadow-lg shadow-emerald-900/30 flex items-center gap-2"
-        >
-          <span>{fa.common.refresh}</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm transition-all border border-slate-700 flex items-center gap-2"
+          >
+            <span>{fa.common.refresh}</span>
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 rounded-xl bg-red-950/40 hover:bg-red-900/50 text-red-300 font-semibold text-sm transition-all border border-red-800/40 flex items-center gap-2"
+          >
+            <span>خروج از حساب</span>
+          </button>
+        </div>
       </header>
 
       {/* Freshness Banner */}

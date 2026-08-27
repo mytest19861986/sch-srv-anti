@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { KpiCard, StatusBadge } from "@school-platform/ui";
 import { fa, toPersianDigits } from "@school-platform/i18n";
 import { SuperAdminTenant, SuperAdminAuditLog } from "@school-platform/api-client";
 
 export default function SuperAdminDashboardPage() {
+  const router = useRouter();
   const [tenants, setTenants] = useState<SuperAdminTenant[]>([
     {
       id: "tenant-mehr",
@@ -75,8 +77,18 @@ export default function SuperAdminDashboardPage() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
+      router.refresh();
+    } catch {
+      window.location.href = "/login";
+    }
+  };
+
   return (
-    <div className="max-w-7xl mx-auto p-6 md:p-8 space-y-8">
+    <div className="max-w-7xl mx-auto p-6 md:p-8 space-y-8" dir="rtl">
       {/* Header */}
       <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
         <div>
@@ -88,12 +100,21 @@ export default function SuperAdminDashboardPage() {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 font-semibold text-sm transition-all shadow-lg shadow-blue-900/30 flex items-center gap-2"
-        >
-          <span>{fa.superAdmin.newTenant}</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 font-semibold text-sm transition-all shadow-lg shadow-blue-900/30 flex items-center gap-2"
+          >
+            <span>{fa.superAdmin.newTenant}</span>
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 rounded-xl bg-red-950/40 hover:bg-red-900/50 text-red-300 font-semibold text-sm transition-all border border-red-800/40 flex items-center gap-2"
+          >
+            <span>خروج از حساب</span>
+          </button>
+        </div>
       </header>
 
       {/* KPI Cards */}

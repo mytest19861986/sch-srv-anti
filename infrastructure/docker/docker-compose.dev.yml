@@ -82,6 +82,7 @@ services:
       - PORT=3001
       - HOST=0.0.0.0
       - HOSTNAME=0.0.0.0
+      - INTERNAL_BACKEND_URL=http://backend-api:3000
       - NEXT_PUBLIC_API_URL=http://localhost:3000
     networks:
       - backend-net
@@ -89,7 +90,7 @@ services:
       backend-api:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://127.0.0.1:3001 || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:3001/login || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 6
@@ -108,6 +109,7 @@ services:
       - PORT=3002
       - HOST=0.0.0.0
       - HOSTNAME=0.0.0.0
+      - INTERNAL_BACKEND_URL=http://backend-api:3000
       - NEXT_PUBLIC_API_URL=http://localhost:3000
     networks:
       - backend-net
@@ -115,7 +117,7 @@ services:
       backend-api:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://127.0.0.1:3002 || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:3002/login || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 6
@@ -215,3 +217,18 @@ services:
       - localstack_data:/var/lib/localstack
     networks:
       - data-net
+
+  # 10. Automated UI Snapshot Service
+  ui-snapshot:
+    image: mcr.microsoft.com/playwright:v1.41.0-jammy
+    container_name: school_ui_snapshot
+    volumes:
+      - ../../scripts:/app/scripts:ro
+      - ../../docs/screenshots:/app/docs/screenshots
+    networks:
+      - backend-net
+    depends_on:
+      - school-web
+      - super-admin-web
+    profiles: ["snapshot", "test"]
+    command: ["echo", "Playwright Snapshot service ready"]

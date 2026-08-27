@@ -24,6 +24,23 @@ export interface IUserRepository {
 export class InMemoryUserRepository implements IUserRepository {
   private users: Map<string, User> = new Map();
 
+  constructor() {
+    this.seedDefaultUsers();
+  }
+
+  private seedDefaultUsers() {
+    const defaultHash = '$2b$10$hrSM3.pKmMS6o9.3Ifa5AOBjZRecjPAQLiGE12bCjuuSoUZKQNYC2'; // Demo@1234
+    const defaults: User[] = [
+      { id: 'usr-super-admin-1', email: 'super-admin@platform.ir', role: 'SUPER_ADMIN', tenantId: 'system', fullName: 'راهبر کل پلتفرم', passwordHash: defaultHash, isActive: 'true' },
+      { id: 'usr-school-admin-1', email: 'school-admin@demo.ir', role: 'SCHOOL_ADMIN', tenantId: 'tenant-school-mehr', fullName: 'مدیر دبستان مهر آفرین', passwordHash: defaultHash, isActive: 'true' },
+      { id: 'usr-driver-1', email: 'driver@demo.ir', role: 'DRIVER', tenantId: 'tenant-school-mehr', fullName: 'علی رضایی (راننده)', passwordHash: defaultHash, isActive: 'true' },
+      { id: 'usr-parent-1', email: 'parent@demo.ir', role: 'PARENT', tenantId: 'tenant-school-mehr', fullName: 'محمد تهرانی (ولی دانش‌آموز)', passwordHash: defaultHash, isActive: 'true' },
+    ];
+    for (const u of defaults) {
+      this.users.set(u.id, u);
+    }
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     for (const user of this.users.values()) {
       if (user.email === email) return user;
