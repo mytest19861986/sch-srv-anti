@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">سامانه والدین مدرسه</string>
+    <string name="login_title">ورود به پنل اولیا</string>
+    <string name="email_hint">شماره تماس یا ایمیل</string>
+    <string name="password_hint">رمز عبور</string>
+    <string name="login_button">ورود به حساب کاربری</string>
+    <string name="home_title">وضعیت زنده سرویس</string>
+    <string name="timeline_title">تاریخچه و تایم‌لاین</string>
+    <string name="status_in_school">در مدرسه</string>
+    <string name="status_picked_up">سوار سرویس شد</string>
+    <string name="status_dropped_off">پیاده شد (مقصد)</string>
+    <string name="status_absent">غیبت ثبت شده</string>
+    <string name="refresh_button">به‌روزرسانی</string>
+</resources>
