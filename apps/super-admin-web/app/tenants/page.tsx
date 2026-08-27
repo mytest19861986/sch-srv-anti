@@ -123,6 +123,12 @@ export default function TenantsPage() {
                   )}
                 </td>
                 <td className="p-3.5 flex items-center gap-2">
+                  <a
+                    href={`/tenants/${t.id}/manage`}
+                    className="px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-900/40 border border-purple-700/60 text-purple-300 hover:bg-purple-800/60 transition-colors flex items-center gap-1"
+                  >
+                    <span>✏️ مدیریت کامل</span>
+                  </a>
                   <button
                     onClick={() => handleOpenEdit(t)}
                     className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors"

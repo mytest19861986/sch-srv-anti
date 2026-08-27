@@ -17,6 +17,21 @@ export function adminController(
   const activeParentsMap = new Map<string, any>();
   const activeDriversMap = new Map<string, any>();
 
+  function getEffectiveTenantId(request: FastifyRequest, reply?: FastifyReply): string {
+    const user = (request as any).user;
+    const requestedTenant = (request.query as any)?.tenantId || (request.headers as any)['x-tenant-id'] || (request.body as any)?.tenantId;
+    if (user.role === 'SUPER_ADMIN') {
+      return requestedTenant || user.tenantId;
+    }
+    if (requestedTenant && requestedTenant !== user.tenantId) {
+      if (reply) {
+        reply.status(403).send({ error: 'FORBIDDEN', message: 'Cross-tenant access forbidden' });
+      }
+      throw new Error('FORBIDDEN_CROSS_TENANT');
+    }
+    return user.tenantId;
+  }
+
   return async function (fastify: FastifyInstance, opts: FastifyPluginOptions) {
     // Auth hook for all /api/v1/admin/* routes
     fastify.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
@@ -28,7 +43,7 @@ export function adminController(
       try {
         const payload = authService.verifyToken(token);
         if (payload.role !== 'SCHOOL_ADMIN' && payload.role !== 'SCHOOL_OPERATOR' && payload.role !== 'SUPER_ADMIN') {
-          return reply.status(403).send({ error: 'FORBIDDEN', message: 'School admin or operator role required' });
+          return reply.status(403).send({ error: 'FORBIDDEN', message: 'School admin, operator, or Super admin role required' });
         }
         (request as any).user = payload;
       } catch {
@@ -39,8 +54,13 @@ export function adminController(
     // ==========================================
     // 1. STUDENTS CRUD
     // ==========================================
-    fastify.get('/students', async (request: FastifyRequest<{ Querystring: { page?: string; limit?: string; q?: string } }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.get('/students', async (request: FastifyRequest<{ Querystring: { page?: string; limit?: string; q?: string; tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const q = request.query.q?.toLowerCase() || '';
       
       const studentsInTenant = Array.from(activeStudentsMap.values()).filter(s => s.tenantId === tenantId && !s.isDeleted);
@@ -49,8 +69,13 @@ export function adminController(
       return reply.send({ items: filtered, total: filtered.length, page: 1, limit: 20 });
     });
 
-    fastify.post('/students', async (request: FastifyRequest<{ Body: { first_name: string; last_name: string; grade: string; national_code?: string; parent_ids?: string[] } }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.post('/students', async (request: FastifyRequest<{ Body: { first_name: string; last_name: string; grade: string; national_code?: string; parent_ids?: string[]; tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const { first_name, last_name, grade, national_code, parent_ids = [] } = request.body || {};
 
       if (!first_name || !last_name) {
@@ -74,7 +99,6 @@ export function adminController(
 
       activeStudentsMap.set(studentId, studentRecord);
 
-      // Link to domain repo
       await domainRepository.createStudent({
         id: studentId,
         tenantId,
@@ -93,14 +117,19 @@ export function adminController(
         action: 'CREATE',
         resourceType: 'STUDENT',
         resourceId: studentId,
-        changes: studentRecord
+        changes: { actor_role: (request as any).user.role, record: studentRecord }
       });
 
       return reply.status(201).send(studentRecord);
     });
 
-    fastify.patch('/students/:id', async (request: FastifyRequest<{ Params: { id: string }; Body: any }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.patch('/students/:id', async (request: FastifyRequest<{ Params: { id: string }; Body: any; Querystring: { tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const { id } = request.params;
       const existing = activeStudentsMap.get(id);
 
@@ -122,14 +151,19 @@ export function adminController(
         action: 'UPDATE',
         resourceType: 'STUDENT',
         resourceId: id,
-        changes: { previous: existing, updated }
+        changes: { actor_role: (request as any).user.role, previous: existing, updated }
       });
 
       return reply.send(updated);
     });
 
-    fastify.delete('/students/:id', async (request: FastifyRequest<{ Params: { id: string } }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.delete('/students/:id', async (request: FastifyRequest<{ Params: { id: string }; Querystring: { tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const { id } = request.params;
       const existing = activeStudentsMap.get(id);
 
@@ -147,17 +181,22 @@ export function adminController(
         action: 'DELETE',
         resourceType: 'STUDENT',
         resourceId: id,
-        changes: { softDeleted: true }
+        changes: { actor_role: (request as any).user.role, softDeleted: true }
       });
 
       return reply.send({ success: true, message: 'Student soft-deleted successfully' });
     });
 
     // ==========================================
-    // 2. PARENTS CRUD & USER ENROLLMENT
+    // 2. PARENTS CRUD
     // ==========================================
-    fastify.get('/parents', async (request: FastifyRequest<{ Querystring: { q?: string } }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.get('/parents', async (request: FastifyRequest<{ Querystring: { q?: string; tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const q = request.query.q?.toLowerCase() || '';
 
       const parentsInTenant = Array.from(activeParentsMap.values()).filter(p => p.tenantId === tenantId && !p.isDeleted);
@@ -166,15 +205,19 @@ export function adminController(
       return reply.send({ items: filtered, total: filtered.length, page: 1, limit: 20 });
     });
 
-    fastify.post('/parents', async (request: FastifyRequest<{ Body: { full_name: string; phone: string; email?: string; temp_password?: string; student_ids?: string[] } }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.post('/parents', async (request: FastifyRequest<{ Body: { full_name: string; phone: string; email?: string; temp_password?: string; student_ids?: string[]; tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const { full_name, phone, email, temp_password, student_ids = [] } = request.body || {};
 
       if (!full_name || !phone) {
         return reply.status(400).send({ error: 'BAD_REQUEST', message: 'full_name and phone are required' });
       }
 
-      // Check unique phone/email in tenant
       const existingParents = Array.from(activeParentsMap.values()).filter(p => p.tenantId === tenantId && !p.isDeleted);
       if (existingParents.some(p => p.phone === phone)) {
         return reply.status(409).send({ error: 'CONFLICT', message: 'Phone number already exists in this tenant' });
@@ -184,7 +227,6 @@ export function adminController(
       const generatedPassword = temp_password || `Pass@${Math.floor(100000 + Math.random() * 900000)}`;
       const userEmail = email || `parent.${phone.slice(-4)}@${tenantId}.serviceyar.ir`;
 
-      // Create PARENT user account in auth
       const userId = `usr-parent-${Date.now()}`;
       try {
         await authService.register({
@@ -194,9 +236,7 @@ export function adminController(
           role: 'PARENT',
           tenantId
         });
-      } catch (err: any) {
-        // If already exists in auth repo, proceed
-      }
+      } catch (err: any) {}
 
       const parentRecord = {
         id: parentId,
@@ -232,14 +272,19 @@ export function adminController(
         action: 'CREATE',
         resourceType: 'PARENT',
         resourceId: parentId,
-        changes: { ...parentRecord, temp_password: '[REDACTED]' }
+        changes: { actor_role: (request as any).user.role, ...parentRecord, temp_password: '[REDACTED]' }
       });
 
       return reply.status(201).send(parentRecord);
     });
 
-    fastify.patch('/parents/:id', async (request: FastifyRequest<{ Params: { id: string }; Body: any }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.patch('/parents/:id', async (request: FastifyRequest<{ Params: { id: string }; Body: any; Querystring: { tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const { id } = request.params;
       const existing = activeParentsMap.get(id);
 
@@ -256,14 +301,19 @@ export function adminController(
         action: 'UPDATE',
         resourceType: 'PARENT',
         resourceId: id,
-        changes: { previous: existing, updated }
+        changes: { actor_role: (request as any).user.role, previous: existing, updated }
       });
 
       return reply.send(updated);
     });
 
-    fastify.delete('/parents/:id', async (request: FastifyRequest<{ Params: { id: string } }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.delete('/parents/:id', async (request: FastifyRequest<{ Params: { id: string }; Querystring: { tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const { id } = request.params;
       const existing = activeParentsMap.get(id);
 
@@ -281,7 +331,7 @@ export function adminController(
         action: 'DELETE',
         resourceType: 'PARENT',
         resourceId: id,
-        changes: { softDeleted: true }
+        changes: { actor_role: (request as any).user.role, softDeleted: true }
       });
 
       return reply.send({ success: true, message: 'Parent soft-deleted successfully' });
@@ -290,8 +340,13 @@ export function adminController(
     // ==========================================
     // 3. DRIVERS CRUD
     // ==========================================
-    fastify.get('/drivers', async (request: FastifyRequest<{ Querystring: { q?: string } }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.get('/drivers', async (request: FastifyRequest<{ Querystring: { q?: string; tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const q = request.query.q?.toLowerCase() || '';
 
       const driversInTenant = Array.from(activeDriversMap.values()).filter(d => d.tenantId === tenantId && !d.isDeleted);
@@ -300,8 +355,13 @@ export function adminController(
       return reply.send({ items: filtered, total: filtered.length, page: 1, limit: 20 });
     });
 
-    fastify.post('/drivers', async (request: FastifyRequest<{ Body: { full_name: string; phone: string; license_no: string; vehicle_id?: string } }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.post('/drivers', async (request: FastifyRequest<{ Body: { full_name: string; phone: string; license_no: string; vehicle_id?: string; tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const { full_name, phone, license_no, vehicle_id } = request.body || {};
 
       if (!full_name || !phone || !license_no) {
@@ -340,14 +400,19 @@ export function adminController(
         action: 'CREATE',
         resourceType: 'DRIVER',
         resourceId: driverId,
-        changes: driverRecord
+        changes: { actor_role: (request as any).user.role, record: driverRecord }
       });
 
       return reply.status(201).send(driverRecord);
     });
 
-    fastify.patch('/drivers/:id', async (request: FastifyRequest<{ Params: { id: string }; Body: any }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.patch('/drivers/:id', async (request: FastifyRequest<{ Params: { id: string }; Body: any; Querystring: { tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const { id } = request.params;
       const existing = activeDriversMap.get(id);
 
@@ -364,14 +429,19 @@ export function adminController(
         action: 'UPDATE',
         resourceType: 'DRIVER',
         resourceId: id,
-        changes: { previous: existing, updated }
+        changes: { actor_role: (request as any).user.role, previous: existing, updated }
       });
 
       return reply.send(updated);
     });
 
-    fastify.delete('/drivers/:id', async (request: FastifyRequest<{ Params: { id: string } }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.delete('/drivers/:id', async (request: FastifyRequest<{ Params: { id: string }; Querystring: { tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const { id } = request.params;
       const existing = activeDriversMap.get(id);
 
@@ -389,7 +459,7 @@ export function adminController(
         action: 'DELETE',
         resourceType: 'DRIVER',
         resourceId: id,
-        changes: { softDeleted: true }
+        changes: { actor_role: (request as any).user.role, softDeleted: true }
       });
 
       return reply.send({ success: true, message: 'Driver soft-deleted successfully' });
@@ -398,14 +468,24 @@ export function adminController(
     // ==========================================
     // 4. VEHICLES CRUD
     // ==========================================
-    fastify.get('/vehicles', async (request: FastifyRequest, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.get('/vehicles', async (request: FastifyRequest<{ Querystring: { tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const list = Array.from(vehiclesMap.values()).filter(v => v.tenantId === tenantId && !v.isDeleted);
       return reply.send({ items: list, total: list.length, page: 1, limit: 20 });
     });
 
-    fastify.post('/vehicles', async (request: FastifyRequest<{ Body: { plate: string; model: string; capacity: number } }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.post('/vehicles', async (request: FastifyRequest<{ Body: { plate: string; model: string; capacity: number; tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const { plate, model, capacity } = request.body || {};
 
       if (!plate || !model) {
@@ -432,14 +512,19 @@ export function adminController(
         action: 'CREATE',
         resourceType: 'VEHICLE',
         resourceId: vehicleId,
-        changes: vehicleRecord
+        changes: { actor_role: (request as any).user.role, record: vehicleRecord }
       });
 
       return reply.status(201).send(vehicleRecord);
     });
 
-    fastify.patch('/vehicles/:id', async (request: FastifyRequest<{ Params: { id: string }; Body: any }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.patch('/vehicles/:id', async (request: FastifyRequest<{ Params: { id: string }; Body: any; Querystring: { tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const { id } = request.params;
       const existing = vehiclesMap.get(id);
 
@@ -456,14 +541,19 @@ export function adminController(
         action: 'UPDATE',
         resourceType: 'VEHICLE',
         resourceId: id,
-        changes: { previous: existing, updated }
+        changes: { actor_role: (request as any).user.role, previous: existing, updated }
       });
 
       return reply.send(updated);
     });
 
-    fastify.delete('/vehicles/:id', async (request: FastifyRequest<{ Params: { id: string } }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.delete('/vehicles/:id', async (request: FastifyRequest<{ Params: { id: string }; Querystring: { tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const { id } = request.params;
       const existing = vehiclesMap.get(id);
 
@@ -481,7 +571,7 @@ export function adminController(
         action: 'DELETE',
         resourceType: 'VEHICLE',
         resourceId: id,
-        changes: { softDeleted: true }
+        changes: { actor_role: (request as any).user.role, softDeleted: true }
       });
 
       return reply.send({ success: true, message: 'Vehicle soft-deleted successfully' });
@@ -490,14 +580,24 @@ export function adminController(
     // ==========================================
     // 5. ROUTES CRUD
     // ==========================================
-    fastify.get('/routes', async (request: FastifyRequest, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.get('/routes', async (request: FastifyRequest<{ Querystring: { tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const list = Array.from(routesMap.values()).filter(r => r.tenantId === tenantId && !r.isDeleted);
       return reply.send({ items: list, total: list.length, page: 1, limit: 20 });
     });
 
-    fastify.post('/routes', async (request: FastifyRequest<{ Body: { name: string; origin?: string; destination?: string; stops?: string[]; driver_id?: string; vehicle_id?: string } }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.post('/routes', async (request: FastifyRequest<{ Body: { name: string; origin?: string; destination?: string; stops?: string[]; driver_id?: string; vehicle_id?: string; tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const { name, origin, destination, stops = [], driver_id, vehicle_id } = request.body || {};
 
       if (!name) {
@@ -535,14 +635,19 @@ export function adminController(
         action: 'CREATE',
         resourceType: 'ROUTE',
         resourceId: routeId,
-        changes: routeRecord
+        changes: { actor_role: (request as any).user.role, record: routeRecord }
       });
 
       return reply.status(201).send(routeRecord);
     });
 
-    fastify.patch('/routes/:id', async (request: FastifyRequest<{ Params: { id: string }; Body: any }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.patch('/routes/:id', async (request: FastifyRequest<{ Params: { id: string }; Body: any; Querystring: { tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const { id } = request.params;
       const existing = routesMap.get(id);
 
@@ -559,14 +664,19 @@ export function adminController(
         action: 'UPDATE',
         resourceType: 'ROUTE',
         resourceId: id,
-        changes: { previous: existing, updated }
+        changes: { actor_role: (request as any).user.role, previous: existing, updated }
       });
 
       return reply.send(updated);
     });
 
-    fastify.delete('/routes/:id', async (request: FastifyRequest<{ Params: { id: string } }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.delete('/routes/:id', async (request: FastifyRequest<{ Params: { id: string }; Querystring: { tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const { id } = request.params;
       const existing = routesMap.get(id);
 
@@ -584,15 +694,20 @@ export function adminController(
         action: 'DELETE',
         resourceType: 'ROUTE',
         resourceId: id,
-        changes: { softDeleted: true }
+        changes: { actor_role: (request as any).user.role, softDeleted: true }
       });
 
       return reply.send({ success: true, message: 'Route soft-deleted successfully' });
     });
 
-    // 6. Services & Events list (existing)
-    fastify.get('/services', async (request: FastifyRequest, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    // 6. Services & Events
+    fastify.get('/services', async (request: FastifyRequest<{ Querystring: { tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const services = [
         { id: 'srv-101', tenantId, routeName: 'مسیر ۱ - ونک به سعادت‌آباد', driverName: 'علی رضایی', driverPhone: '09121112233', totalStudents: 18, pickedUp: 18, droppedOff: 16, status: 'IN_PROGRESS' },
         { id: 'srv-102', tenantId, routeName: 'مسیر ۲ - پاسداران به نیاوران', driverName: 'حسین حسینی', driverPhone: '09123334455', totalStudents: 15, pickedUp: 15, droppedOff: 15, status: 'COMPLETED' },
@@ -600,8 +715,13 @@ export function adminController(
       return reply.send({ items: services, total: 8, page: 1, limit: 10 });
     });
 
-    fastify.get('/events', async (request: FastifyRequest<{ Querystring: { date?: string } }>, reply) => {
-      const tenantId = (request as any).user.tenantId;
+    fastify.get('/events', async (request: FastifyRequest<{ Querystring: { date?: string; tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
       const date = request.query.date || '2026-08-27';
 
       const items = [
