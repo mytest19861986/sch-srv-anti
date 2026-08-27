@@ -168,6 +168,9 @@ services:
     container_name: school_pg_replica
     restart: unless-stopped
     environment:
+      - POSTGRES_DB=school_transport
+      - POSTGRES_USER=school_user
+      - POSTGRES_PASSWORD=school_secret_pass
       - PGUSER=school_user
       - PGPASSWORD=school_secret_pass
     volumes:

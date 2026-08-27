@@ -5,13 +5,15 @@ RUN apk add --no-cache curl
 FROM base AS builder
 WORKDIR /app
 
+COPY package.json ./
 COPY packages ./packages
 COPY apps/school-web ./apps/school-web
 
 WORKDIR /app/apps/school-web
-RUN npm install --legacy-peer-deps || true
+RUN npm install ../../packages/i18n ../../packages/auth ../../packages/api-client ../../packages/ui --legacy-peer-deps || true
+RUN npm install --legacy-peer-deps
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm run build || true
+RUN npx next build
 
 FROM base AS runner
 WORKDIR /app/apps/school-web
@@ -24,4 +26,4 @@ COPY --from=builder /app/packages /app/packages
 COPY --from=builder /app/apps/school-web /app/apps/school-web
 
 EXPOSE 3001
-CMD ["npx", "next", "start", "-H", "0.0.0.0", "-p", "3001"]
+CMD ["npm", "run", "start"]

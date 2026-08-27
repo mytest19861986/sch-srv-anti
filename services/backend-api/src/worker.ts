@@ -1,35 +1,26 @@
 import { appLogger } from './shared/observability/logger.service.js';
 import { InMemoryOutboxQueueService } from './shared/queue/queue.service.js';
 import { NotificationService } from './modules/notification/notification.service.js';
-import { MockNotificationAdapter } from './modules/notification/mock-notification.adapter.js';
-import { FcmNotificationAdapter } from './modules/notification/fcm.adapter.js';
 import { OutboxWorkerService } from './modules/notification/outbox-worker.service.js';
 import { QueueMonitorService } from './shared/observability/queue-monitor.service.js';
+import { InMemoryDomainRepository } from './modules/domain/domain.service.js';
 import { InMemoryDeviceTokenRepository } from './modules/parent/device-token.service.js';
 
 async function startWorker() {
   appLogger.info('⚙️ Initializing Standalone Outbox Worker Process...');
 
-  const queueService = new InMemoryOutboxQueueService();
+  const domainRepo = new InMemoryDomainRepository();
   const deviceTokenRepo = new InMemoryDeviceTokenRepository();
-
-  const notificationAdapter = process.env.NOTIFICATION_ADAPTER === 'fcm'
-    ? new FcmNotificationAdapter()
-    : new MockNotificationAdapter();
-
-  const notificationService = new NotificationService(
-    notificationAdapter,
-    deviceTokenRepo,
-    queueService
-  );
+  const queueService = new InMemoryOutboxQueueService();
+  const notificationService = new NotificationService(domainRepo, deviceTokenRepo);
 
   const outboxWorker = new OutboxWorkerService(
     queueService,
     notificationService,
+    undefined,
     {
       pollIntervalMs: 500,
-      batchSize: 50,
-      maxRetries: 3
+      batchSize: 50
     }
   );
 
@@ -38,7 +29,7 @@ async function startWorker() {
   outboxWorker.start();
   queueMonitor.start();
 
-  appLogger.info('🚀 outbox-worker started and listening for asynchronous events...');
+  appLogger.info('🚀 outbox-worker started and polling for queued events...');
 
   // Graceful Shutdown
   const signals: NodeJS.Signals[] = ['SIGTERM', 'SIGINT'];
