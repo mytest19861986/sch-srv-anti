@@ -14,6 +14,8 @@ COMPOSE_FILE="infrastructure/docker/docker-compose.dev.yml"
 compose_cmd() {
   if docker compose version >/dev/null 2>&1; then
     docker compose "$@"
+  elif docker.exe compose version >/dev/null 2>&1; then
+    docker.exe compose "$@"
   elif command -v docker-compose >/dev/null 2>&1; then
     docker-compose "$@"
   else
@@ -45,7 +47,7 @@ fi
 show_banner
 
 echo "1. Checking prerequisites..."
-if ! docker --version >/dev/null 2>&1; then
+if ! command -v docker >/dev/null 2>&1 && ! command -v docker.exe >/dev/null 2>&1; then
   echo ""
   echo "❌ خطای پیش‌نیاز: Docker Desktop یافت نشد یا در حال اجرا نیست."
   echo "📌 تنها پیش‌نیاز اجرای این سامانه، نرم‌افزار Docker Desktop می‌باشد."
@@ -57,10 +59,10 @@ fi
 echo "   ✅ Docker & Docker Compose تایید شدند (تنها پیش‌نیاز سخت‌گیرانه سیستم)."
 
 # Informative non-blocking runtime checks
-if ! command -v node >/dev/null 2>&1; then
+if ! command -v node >/dev/null 2>&1 && ! command -v node.exe >/dev/null 2>&1; then
   echo "   ℹ️  نکته: Node.js روی سیستم میزبان یافت نشد (کاملاً اختیاری - تمام سرویس‌ها در داکر اجرا می‌شوند)."
 fi
-if ! command -v bun >/dev/null 2>&1; then
+if ! command -v bun >/dev/null 2>&1 && ! command -v bun.exe >/dev/null 2>&1; then
   echo "   ℹ️  نکته: Bun روی سیستم میزبان یافت نشد (کاملاً اختیاری - در کانتینرها لود می‌شود)."
 fi
 
@@ -94,7 +96,7 @@ compose_cmd -f "$COMPOSE_FILE" up --build -d
 echo "4. Waiting for Backend API & Database to become healthy..."
 MAX_RETRIES=30
 COUNT=0
-until curl -s -f http://localhost:3000/health/live >/dev/null 2>&1 || [ $COUNT -ge $MAX_RETRIES ]; do
+until curl.exe -s -f http://localhost:3000/health/live >/dev/null 2>&1 || curl -s -f http://localhost:3000/health/live >/dev/null 2>&1 || [ $COUNT -ge $MAX_RETRIES ]; do
   sleep 1
   COUNT=$((COUNT + 1))
 done
