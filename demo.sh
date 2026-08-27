@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# 🚌 School Transport Platform — Docker-Only Quick Demo Launcher (Order #22 & #23)
+# 🚌 School Transport Platform — Docker-Only Quick Demo Launcher (Order #22 - #28)
 # ==============================================================================
 # Windows / Git Bash / Linux / macOS compatible
 # Requirement: Docker Desktop ONLY (Zero Host Node/Bun dependencies required)
@@ -75,12 +75,15 @@ if [ ! -f .env ]; then
     cat <<EOF > .env
 NODE_ENV=development
 PORT=3000
+HOST=0.0.0.0
 DATABASE_URL=postgres://school_user:school_secret_pass@localhost:5432/school_transport
 DATABASE_REPLICA_URL=postgres://school_user:school_secret_pass@localhost:5433/school_transport
 USE_READ_REPLICA=false
 REDIS_URL=redis://localhost:6379
 CACHE_ADAPTER=inmemory
 STORAGE_TYPE=local
+LOCALSTACK_ENDPOINT=http://localhost:4567
+S3_BUCKET=school-transport-assets
 NOTIFICATION_ADAPTER=mock
 JWT_SECRET=demo_super_secret_jwt_key_2026
 EOF
@@ -119,6 +122,7 @@ echo "   🏫 School Web Dashboard:   http://localhost:3001"
 echo "   🏢 Super Admin Dashboard:  http://localhost:3002"
 echo "   ⚡ API Gateway (Nginx):    http://localhost:80"
 echo "   🚀 Backend API Direct:     http://localhost:3000"
+echo "   📦 LocalStack S3 Emulator: http://localhost:4567"
 echo ""
 echo "🔑 DEMO LOGIN CREDENTIALS (LOCAL USE ONLY):"
 echo "   ┌──────────────────────────┬─────────────────────────┬────────────┐"

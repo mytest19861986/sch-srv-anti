@@ -52,6 +52,7 @@ services:
       - CACHE_ADAPTER=inmemory
       - STORAGE_TYPE=local
       - NOTIFICATION_ADAPTER=mock
+      - LOCALSTACK_ENDPOINT=http://localstack:4566
       - JWT_SECRET=demo_super_secret_jwt_key_2026
     networks:
       - backend-net
@@ -206,7 +207,7 @@ services:
     container_name: school_localstack_s3
     restart: unless-stopped
     ports:
-      - "4566:4566"
+      - "4567:4566"
     environment:
       - SERVICES=s3
       - DEFAULT_REGION=us-east-1

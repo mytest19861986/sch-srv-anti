@@ -40,10 +40,12 @@ export class LocalStorageAdapter implements StorageAdapter {
 export class S3StorageAdapter implements StorageAdapter {
   private fallback = new LocalStorageAdapter();
   private bucket: string;
+  private endpoint?: string;
 
-  constructor(bucket: string = "school-transport-assets") {
+  constructor(bucket: string = "school-transport-assets", endpoint?: string) {
     this.bucket = bucket;
-    appLogger.info(`[S3StorageAdapter] S3 Storage configured for bucket: ${bucket}`);
+    this.endpoint = endpoint || process.env.LOCALSTACK_ENDPOINT || process.env.S3_ENDPOINT;
+    appLogger.info(`[S3StorageAdapter] S3 Storage configured for bucket: ${bucket}${this.endpoint ? ` (endpoint: ${this.endpoint})` : ''}`);
   }
 
   async putObject(key: string, data: Buffer | string, contentType?: string): Promise<string> {
@@ -55,6 +57,9 @@ export class S3StorageAdapter implements StorageAdapter {
   }
 
   async generatePresignedUrl(key: string, expiresInSeconds: number = 3600): Promise<string> {
+    if (this.endpoint) {
+      return `${this.endpoint}/${this.bucket}/${key}?X-Amz-Expires=${expiresInSeconds}`;
+    }
     return `https://${this.bucket}.s3.amazonaws.com/${key}?X-Amz-Expires=${expiresInSeconds}`;
   }
 
@@ -65,7 +70,8 @@ export class S3StorageAdapter implements StorageAdapter {
 
 export function createStorageAdapter(): StorageAdapter {
   if (process.env.STORAGE_TYPE === "s3") {
-    return new S3StorageAdapter(process.env.S3_BUCKET || "school-transport-assets");
+    const endpoint = process.env.LOCALSTACK_ENDPOINT || process.env.S3_ENDPOINT || "http://localhost:4567";
+    return new S3StorageAdapter(process.env.S3_BUCKET || "school-transport-assets", endpoint);
   }
   return new LocalStorageAdapter();
 }
