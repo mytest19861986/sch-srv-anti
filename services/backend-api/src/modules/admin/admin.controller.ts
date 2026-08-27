@@ -726,21 +726,69 @@ export function adminController(
 
       const items = [
         { id: 'evt-1', tenantId, studentName: 'امیرعلی رضایی', eventType: 'BOARDED', time: '07:15', route: 'مسیر ۱', driver: 'علی رضایی' },
-        { id: 'evt-2', tenantId, studentName: 'سارا محمدی', eventType: 'DROPPED_OFF', time: '07:45', route: 'مسیر ۱', driver: 'علی رضایی' },
-        { id: 'evt-3', tenantId, studentName: 'کیان تهرانی', eventType: 'BOARDED', time: '07:20', route: 'مسیر ۱', driver: 'علی رضایی' },
+        { id: 'evt-2', tenantId, studentName: 'سارا محمدی', eventType: 'DROPPED_OFF', time: '07:45', route: 'مسیر ۱', driver: 'علی رضایی' }
       ];
+      return reply.send({ items, hourlyDistribution: { '07:00': 42, '13:00': 35 }, totalEvents: 140 });
+    });
 
-      const hourlyDistribution: Record<string, number> = {
-        '06:00': 5,
-        '07:00': 42,
-        '08:00': 18,
-        '12:00': 2,
-        '13:00': 35,
-        '14:00': 28,
-        '15:00': 10
-      };
+    // 7. Bulk Export CSV Endpoint (Bot #45)
+    fastify.get('/export/:entity', async (request: FastifyRequest<{ Params: { entity: string }; Querystring: { tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
+      const { entity } = request.params;
 
-      return reply.send({ items, hourlyDistribution, totalEvents: 140 });
+      let csv = '\uFEFF'; // UTF-8 BOM for Excel Persian compatibility
+
+      if (entity === 'students') {
+        const list = Array.from(activeStudentsMap.values()).filter(s => s.tenantId === tenantId && !s.isDeleted);
+        csv += 'شناسه,نام,نام خانوادگی,کد ملی,پایه,وضعیت\n';
+        for (const s of list) {
+          csv += `"${s.id}","${s.firstName}","${s.lastName}","${s.nationalCode}","${s.grade}","${s.status}"\n`;
+        }
+      } else if (entity === 'parents') {
+        const list = Array.from(activeParentsMap.values()).filter(p => p.tenantId === tenantId && !p.isDeleted);
+        csv += 'شناسه,نام ولی,شماره همراه,ایمیل,تعداد فرزندان,وضعیت\n';
+        for (const p of list) {
+          csv += `"${p.id}","${p.fullName}","${p.phone}","${p.email}","${p.childrenCount || 1}","${p.status}"\n`;
+        }
+      } else if (entity === 'drivers') {
+        const list = Array.from(activeDriversMap.values()).filter(d => d.tenantId === tenantId && !d.isDeleted);
+        csv += 'شناسه,نام راننده,شماره همراه,شماره گواهینامه,وضعیت\n';
+        for (const d of list) {
+          csv += `"${d.id}","${d.fullName}","${d.phone}","${d.licenseNo}","${d.status}"\n`;
+        }
+      } else if (entity === 'vehicles') {
+        const list = Array.from(vehiclesMap.values()).filter(v => v.tenantId === tenantId && !v.isDeleted);
+        csv += 'شناسه,پلاک انتظامی,مدل خودرو,ظرفیت,وضعیت\n';
+        for (const v of list) {
+          csv += `"${v.id}","${v.plate}","${v.model}","${v.capacity}","${v.status}"\n`;
+        }
+      } else if (entity === 'routes') {
+        const list = Array.from(routesMap.values()).filter(r => r.tenantId === tenantId && !r.isDeleted);
+        csv += 'شناسه,نام مسیر,مبداء,مقصد,تعداد ایستگاه‌ها,وضعیت\n';
+        for (const r of list) {
+          csv += `"${r.id}","${r.name}","${r.origin}","${r.destination}","${r.stopsCount || 0}","${r.status}"\n`;
+        }
+      } else {
+        return reply.status(400).send({ error: 'BAD_REQUEST', message: 'Invalid export entity' });
+      }
+
+      await auditService.log({
+        tenantId,
+        userId: (request as any).user.userId,
+        action: 'EXPORT',
+        resourceType: entity.toUpperCase(),
+        resourceId: 'ALL',
+        changes: { actor_role: (request as any).user.role, export_format: 'CSV' }
+      });
+
+      reply.header('Content-Type', 'text/csv; charset=utf-8');
+      reply.header('Content-Disposition', `attachment; filename="${entity}-${tenantId}-${Date.now()}.csv"`);
+      return reply.send(Buffer.from(csv, 'utf-8'));
     });
   };
 }
