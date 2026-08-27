@@ -1,61 +1,71 @@
-# 🚌 School Transportation Management System (سامانه جامع مدیریت سرویس مدارس)
+# 🚌 School Transport Platform (سامانه جامع مدیریت سرویس مدارس)
 
-یک پلتفرم ماژولار با معماری **Modular Monolith** و قابلیت اطمینان بالا (High Availability) جهت مدیریت حضور و غیاب، مانیفست شیفت‌های رانندگان، اعلان‌های لحظه‌ای به اولیا و داشبورد مدارس در مقیاس چندمستاجری (Multi-Tenant).
-
----
-
-## 🏗️ معماری کلی و تکنولوژی‌ها
-- **زبان و محیط اجرا:** TypeScript / Node.js / Bun Runtime
-- **پایگاه داده اصلی:** PostgreSQL (با Transactional Outbox و آماده‌سازی برای پارتیشن‌بندی)
-- **مکانیزم صف رویدادها:** Database-backed Queue (`FOR UPDATE SKIP LOCKED`) با مسیر مهاجرت به Redis BullMQ / Kafka
-- **احراز هویت و ایزولاسیون:** JWT، RBAC سفت‌وسخت و Zero-Trust Multi-Tenancy
-- **اورکستریشن و استقرار:** Docker Multi-stage، Kubernetes (Kustomize Base/Overlays) و Prometheus Custom Metrics HPA
+An enterprise-grade, offline-first, multi-tenant school transport management platform built with high throughput event-sourcing principles, Zero-Trust multi-tenancy, and decoupled asynchronous notifications.
 
 ---
 
-## 🚀 راهنمای سریع راه‌اندازی (Quick Start)
+## ⚡ Quick Start (Staging Deployment)
 
-### ۱. پیش‌نیازها
-- نصب Bun (یا Node.js v20+)
-- نصب Docker و Docker Compose (اختیاری برای دیتابیس)
+To run the complete production-grade stack (PostgreSQL Primary + Replica, Redis, LocalStack S3, Nginx, Backend API, and Outbox Worker) locally:
 
-### ۲. نصب وابستگی‌ها و بیلد پروژه
 ```bash
-cd services/backend-api
-bun install
-bun run build
+# 1. Clone repository
+git clone https://github.com/mytest19861986/sch-srv-anti.git
+cd sch-srv-anti
+
+# 2. Execute one-command staging deployment
+./scripts/deploy-staging.sh
 ```
 
-### ۳. اجرای تست‌های یکپارچگی و تست نفوذ امنیتی
-```bash
-bun test
-```
+### Accessing Endpoints & Applications
+- 🌐 **API Gateway (Nginx)**: [http://localhost:80](http://localhost:80)
+- 🚀 **Backend API Direct**: [http://localhost:3000](http://localhost:3000)
+- 🏫 **School Web Dashboard**: [http://localhost:3001](http://localhost:3001)
+- ⚙️ **Super Admin Web Dashboard**: [http://localhost:3002](http://localhost:3002)
 
-### ۴. اجرای سرویس در محیط محلی
-```bash
-bun run src/index.ts
+---
+
+## 🏗️ Architecture & Component Topology
+
+```mermaid
+graph TD
+    DriverApp["📱 Driver Android App<br/>(Offline-First / Room / Compose)"] -->|100 r/s Burst /sync/batch| Nginx["🛡️ Nginx Load Balancer<br/>(Smart Rate Limiting)"]
+    ParentApp["📱 Parent Android App<br/>(Live Status / Deep Link)"] -->|Live Timeline / FCM| Nginx
+    SchoolWeb["💻 School Web Dashboard<br/>(Next.js 14 / StaleDataBanner)"] -->|REST / Read Replica| Nginx
+    SuperAdminWeb["🏢 Super Admin Dashboard<br/>(Tenant CRUD / Audit Logs)"] -->|REST| Nginx
+
+    Nginx --> BackendAPI["⚡ Backend API Cluster (Fastify/Bun)"]
+    BackendAPI -->|Write: Events & Outbox| PGPrimary[("🗄️ PostgreSQL 16 Primary")]
+    BackendAPI -->|Read: Overview & Manifest| PGReplica[("📖 PostgreSQL Read Replica")]
+    BackendAPI -->|Hot Cache & Rate Limits| Redis[("⚡ Redis 7 Cache")]
+    
+    PGPrimary -.->|Streaming Replication| PGReplica
+    PGPrimary --> OutboxWorker["⚙️ Transactional Outbox Worker"]
+    OutboxWorker -->|FCM Push Notification| ParentApp
 ```
 
 ---
 
-## 📚 مستندات کامل سیستم (Documentation Index)
+## 🧪 Testing & Verification
 
-| سند | شرح محتوا |
-| :--- | :--- |
-| 🏛️ **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** | معماری تفصیلی سیستم، جریان داده‌ها و ماژول‌ها |
-| 🛡️ **[SECURITY_REVIEW_REPORT.md](docs/SECURITY_REVIEW_REPORT.md)** | گزارش ارزیابی امنیتی، تست نفوذ IDOR/BOLA و ماتریس تهدیدات |
-| 📊 **[PERFORMANCE_REVIEW.md](docs/PERFORMANCE_REVIEW.md)** | تحلیل عملکرد، نقاط اشباع و پروفایل‌های Latency |
-| 📈 **[CAPACITY_PLAN.md](docs/CAPACITY_PLAN.md)** | طرح تکامل ظرفیت، تئوری صف M/M/c و رشد ذخیره‌سازی تا ۱M+ |
-| 🧪 **[TESTING.md](docs/TESTING.md)** | نتایج تست‌های بار، یکپارچگی و سناریوهای آزمایشی |
-| 🚢 **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** | راهنمای استقرار کانتینری، کوبرنتیز و محیط‌ها |
-| 🚨 **[RUNBOOKS.md](docs/RUNBOOKS.md)** | راهنماهای عملیاتی SRE برای بحران‌های ترافیک صبحگاهی و صف |
-| 📝 **[DECISIONS.md](docs/DECISIONS.md)** | ثبت کلیه تصمیمات معماری (ADR-001 تا ADR-014) |
-| ⚠️ **[KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md)** | فرضیات، محدودیت‌های فنی فعلی و نقشه راه آینده |
-| 📜 **[CHANGELOG.md](CHANGELOG.md)** | تاریخچه تغییرات تمام دستور کارهای اجرایی |
+Run the comprehensive test suite across all layers:
+
+```bash
+# Run backend integration tests (52 tests)
+bun test services/backend-api
+
+# Run shared web packages tests (7 tests)
+bun test packages/i18n packages/auth packages/api-client
+
+# Run full end-to-end integration tests (8 scenarios)
+bun test tests/e2e
+```
 
 ---
 
-## 🔒 استانداردهای امنیتی
-- **Zero-Trust Multi-Tenancy:** تمامی درخواست‌ها بر اساس `tenantId` موجود در توکن JWT اعتبارسنجی می‌شوند.
-- **Append-Only Auditing:** رکوردهای لاگ‌های حسابرسی غیرقابل دستکاری و حذف هستند.
-- **PII & Secret Redaction:** هیچ پسورد یا داده هویتی حساسی در لاگ‌های ساختاریافته نشت نمی‌کند.
+## 📚 Complete Documentation
+- 📖 [Architecture Invariants & ADRs](docs/ARCHITECTURE.md)
+- 🔐 [Security & Zero-Trust Guidelines](docs/SECURITY.md)
+- 🔌 [Production Wire-up Guide](docs/WIRE_UP_GUIDE.md)
+- 📋 [Final Handoff Checklist](docs/HANDOFF_CHECKLIST.md)
+- 🚀 [Deployment & Runbooks](docs/DEPLOYMENT.md)
