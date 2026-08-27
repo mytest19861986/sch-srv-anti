@@ -1,0 +1,61 @@
+گزارش اجرای دستور کار شماره ۱۰ با موفقیت دریافت، تحلیل و در سیستم ثبت گردید.
+آنتی گرویتی، رویکرد Evidence-Based شما در ارائه نتایج تست بار دقیقاً همان چیزی است که در 00-MASTER-CONTEXT.md و 14-Testing.md به عنوان یک اصل خدشه‌ناپذیر تعریف شده است: "هیچ عدد Performance بدون Benchmark واقعی به‌عنوان موفق اعلام نشود."
+📊 تحلیل معماری نتایج تست بار (Architectural Validation)
+اثبات قطعی Decoupling (Worker Backpressure): در سناریوی ۳، با اعمال تأخیر مصنوعی ۲ ثانیه‌ای روی FCM، تاخیر P50 روی API ثبت حضور تنها ۴۳ میلی‌ثانیه (و پردازش هندلر ۰.۴ms) باقی ماند. این یعنی Transactional Outbox Pattern به بی‌نقص‌ترین شکل ممکن کار می‌کند. مسیر بحرانی Write کاملاً از Side-effects ایزوله شده است.
+تحمل Burst صبحگاهی: دستیابی به ۱,۲۲۰ req/s با P99 برابر ۱۳۴ms و ۰٪ خطا در شرایطی که ۱۰٪ درخواست‌ها تکراری (Idempotency Hit) بودند، نشان می‌دهد Unique Constraintهای دیتابیس و منطق کش‌سازی به درستی از CPU در برابر پردازش‌های تکراری محافظت کرده‌اند.
+مدیریت Reconnection Storm: پردازش ۳,۸۷۰ events/s در زمان اتصال مجدد رانندگان بدون Crash یا Memory Leak، پایداری Batch Sync را تأیید می‌کند.
+تصمیم ADR-011: ثبت این تصمیم مبنی بر کفایت Day 1 PostgreSQL و عدم نیاز فوری به Redis/Kafka برای Queue، یک تصمیم معماری کاملاً صحیح و منطبق بر فلسفه "Day 1 ساده و کم‌هزینه" است.
+با تکمیل موفقیت‌آمیز مرحله ۱۴ (Testing) و اثبات پایداری سیستم زیر بار، بر اساس نقشه راه ۱۸ مرحله‌ای، اکنون وارد مرحله ۱۵ (Security Review) می‌شویم. پیش از استقرار در Production، باید از عدم وجود حفره‌های امنیتی، نشت داده بین Tenantها و آسیب‌پذیری‌های رایج اطمینان حاصل کنیم.
+بلافاصله دستور کار اجرایی شماره ۱۱ را صادر می‌کنم.
+🚀 دستور کار اجرایی شماره ۱۱: مرحله ۱۵ - Comprehensive Security Audit & Threat Mitigation
+۱. هدف (Objective)
+اجرای یک بازبینی امنیتی جامع (Security Review) روی کد پیاده‌سازی‌شده (Vertical Slices 1 تا ۸) بر اساس چک‌لیست‌های 15-Security-Review.md و 10-Security.md. هدف، شناسایی و رفع هرگونه آسیب‌پذیری بحرانی (Critical/High) پیش از Release است.
+۲. فایل‌هایی که باید ایجاد/ویرایش شوند (Files to Create/Modify)
+docs/SECURITY_REVIEW_REPORT.md (گزارش جامع یافته‌های امنیتی با دسته‌بندی Severity)
+services/backend-api/tests/security/idor-bola.test.ts (تست‌های نفوذ متمرکز بر IDOR و BOLA)
+services/backend-api/tests/security/rate-limit-abuse.test.ts (تست رفتار Rate Limiter در برابر Abuse)
+اصلاحات احتمالی در Controllerها و Serviceها در صورت کشف حفره امنیتی.
+scripts/secret-scan.sh (اسکریپت یا تنظیمات CI برای جلوگیری از Commit شدن Secrets)
+۳. مشخصات فنی دقیق و چک‌لیست بازبینی (Security Review Checklist)
+آنتی گرویتی، شما باید کد را خط به خط و با دید یک Hacker کلاه سفید بررسی کنید. موارد زیر الزامی هستند:
+AuthN / AuthZ & RBAC:
+آیا هیچ اندپوینتی وجود دارد که فاقد auth.middleware باشد؟
+آیا نقش‌ها (Roles) به درستی در سطح Route یا Controller چک می‌شوند؟ (مثلاً راننده نتواند به اندپوینت‌های مدرسه دسترسی یابد).
+Tenant Isolation & IDOR/BOLA:
+تست نفوذ: کاربر A (از مدرسه A) توکن معتبر دارد اما در URL یا Body درخواست، tenant_id یا student_id مربوط به مدرسه B را ارسال می‌کند. سیستم باید قبل از هرگونه کوئری دیتابیس، این تناقض را با req.context.tenantId کشف و 403 Forbidden برگرداند.
+Validation & Injection:
+آیا تمام ورودی‌های کاربر (Body, Query, Params) با Zod (یا کتابخانه مشابه) اعتبارسنجی می‌شوند؟
+آیا در کوئری‌های Raw SQL (در صورت وجود) از Parameterized Queries استفاده شده است؟ (جلوگیری از SQL Injection).
+Rate Limiting & DDoS Controls:
+آیا Rate Limiterها به درستی روی IP و user_id اعمال می‌شوند؟
+نکته حیاتی: Rate Limiter نباید Burst قانونی صبحگاهی (مثلاً ۱۰۰ درخواست در ثانیه از یک IP مدرسه برای Sync) را مسدود کند. استراتژی باید هوشمند باشد.
+Secret Management & Sensitive Logs:
+بررسی فایل‌های .env و docker-compose. هیچ Secret واقعی نباید در ریپازیتوری باشد.
+بررسی کدهای logger.info یا logger.error. هرگز نباید password, fcm_token, jwt_secret یا اطلاعات PII دانش‌آموزان در لاگ‌ها چاپ شوند.
+Audit Integrity:
+آیا جدول audit_log واقعاً Append-Only است؟ (آیا در کد Serviceها، متدهای UPDATE یا DELETE برای این جدول وجود دارد که باید حذف شوند؟).
+Dependency Security:
+اجرای npm audit (یا معادل آن) و بررسی اینکه هیچ وابستگی با آسیب‌پذیری Critical یا High در پروژه وجود نداشته باشد.
+۴. قانون الزامی دسترسی به ابزار خارجی (External Tool Rule)
+برای تولید Threat Model Matrix (جدول تهدیدات، بردار حمله، و راهکار مقابله) یا بررسی Regexهای پیچیده برای جلوگیری از XSS/Injection در ورودی‌های متنی، منحصراً از لینک زیر استفاده کنید:
+🔗 https://chatgpt.com/g/g-p-6a893db7cb1c8191a8816ce9844bbf42/c/6a893d8b-9dac-83eb-b2ca-e703d57e4b62
+۵. معیارهای پذیرش (Acceptance Criteria)
+فایل docs/SECURITY_REVIEW_REPORT.md ایجاد شود و شامل جدول یافته‌ها (Severity, Description, Mitigation, Status) باشد.
+صفر (0) آسیب‌پذیری Critical یا High باز (Unresolved) باقی بماند.
+تست‌های idor-bola.test.ts حداقل ۵ سناریوی مختلف نفوذ Cross-Tenant و Cross-User را شبیه‌سازی و مسدود کنند.
+هیچ Secret یا PII در لاگ‌های ساختاریافته (JSON Logger) نشت نکند.
+npm audit (یا ابزار مشابه) اجرا شده و نتایج آن در گزارش ثبت شود.
+دستورات Lint, Type Check, Build, Test بدون خطا اجرا شوند.
+📋 فرمت گزارش‌دهی مورد انتظار
+پس از اتمام کار، پاسخ شما باید دقیقاً شامل بخش‌های زیر باشد:
+وضعیت اجرا: (موفق / ناموفق / دارای هشدار)
+فایل‌های ایجاد/ویرایش شده: لیست کامل مسیر فایل‌ها.
+خلاصه گزارش امنیتی (Security Findings Summary):
+تعداد یافته‌های Critical/High/Medium/Low.
+لیست مهم‌ترین حفره‌های کشف‌شده و نحوه رفع آن‌ها (Mitigation).
+نتایج تست نفوذ IDOR/BOLA: خلاصه سناریوهای مسدود شده.
+استفاده از ابزار خارجی: گزارش کوتاه در صورت استفاده.
+موانع یا سوالات فنی (Blockers): در صورت وجود.
+خط تولید در حساس‌ترین مرحله پیش از Release (Security Gate) قرار دارد. منتظر گزارش اجرای دستور کار شماره ۱۱ هستم. پیش به سوی استحکام‌بخشی نهایی!
+Thinking
+AI-generated content may not be accurate.

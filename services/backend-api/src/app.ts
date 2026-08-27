@@ -32,6 +32,7 @@ export interface AppOptions {
   superAdminService?: SuperAdminService;
   startWorker?: boolean;
   logger?: boolean;
+  enableRateLimit?: boolean;
 }
 
 export function buildApp(opts: AppOptions = {}): {
@@ -96,7 +97,7 @@ export function buildApp(opts: AppOptions = {}): {
   app.register(healthController(queueService), { prefix: '/health' });
 
   // Register Auth Module
-  app.register(authController(authService), { prefix: '/api/v1/auth' });
+  app.register(authController(authService, opts.enableRateLimit), { prefix: '/api/v1/auth' });
 
   // Register Attendance Module with Auth, Tenant protection, and Driver Manifest
   app.register(attendanceController(attendanceService, authService, domainRepository), {

@@ -17,6 +17,29 @@ export interface LogPayload {
 export class LoggerService {
   constructor(private readonly defaultContext: string = 'App') {}
 
+  private static SENSITIVE_KEYS = new Set([
+    'password', 'passwordhash', 'secret', 'jwt_secret', 'token', 'access_token',
+    'fcm_token', 'authorization', 'cookie', 'nationalid', 'parentphone', 'phonenumber'
+  ]);
+
+  private sanitizeData(obj: any): any {
+    if (!obj || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(item => this.sanitizeData(item));
+
+    const sanitized: Record<string, any> = {};
+    for (const [k, v] of Object.entries(obj)) {
+      const lowerKey = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (LoggerService.SENSITIVE_KEYS.has(lowerKey)) {
+        sanitized[k] = '[REDACTED]';
+      } else if (typeof v === 'object' && v !== null) {
+        sanitized[k] = this.sanitizeData(v);
+      } else {
+        sanitized[k] = v;
+      }
+    }
+    return sanitized;
+  }
+
   private formatLog(level: LogLevel, message: string, meta: Partial<LogPayload> = {}): void {
     const payload: LogPayload = {
       level,
@@ -25,7 +48,7 @@ export class LoggerService {
       context: meta.context || this.defaultContext,
       requestId: meta.requestId,
       tenantId: meta.tenantId,
-      data: meta.data,
+      data: this.sanitizeData(meta.data),
       error: meta.error
     };
 

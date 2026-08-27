@@ -1,10 +1,13 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
 import { LoginSchema } from './dto/login.dto.js';
 import { AuthService } from './auth.service.js';
+import { authRateLimiter, createRateLimitHook } from '../../shared/middleware/rate-limit.middleware.js';
 
-export function authController(authService: AuthService) {
+export function authController(authService: AuthService, enableRateLimit: boolean = false) {
   return async function (fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    fastify.post('/login', async (request: FastifyRequest, reply: FastifyReply) => {
+    const hooks = enableRateLimit ? [createRateLimitHook(authRateLimiter, { maxRequests: 5, windowMs: 60000 })] : [];
+
+    fastify.post('/login', { preHandler: hooks }, async (request: FastifyRequest, reply: FastifyReply) => {
       const parseResult = LoginSchema.safeParse(request.body);
       if (!parseResult.success) {
         return reply.status(400).send({

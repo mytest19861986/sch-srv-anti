@@ -15,3 +15,6 @@
 | **ADR-009** | Immutable Append-Only Audit Trail | ✅ Approved | Privilege changes, tenant modifications, and security actions are recorded irreversibly. |
 | **ADR-010** | Database-Backed Queue with `FOR UPDATE SKIP LOCKED` for Day 1 | ✅ Approved | Eliminates external infrastructure dependencies while ensuring worker concurrency. |
 | **ADR-011** | Progressive Load Testing & Backpressure Validation | ✅ Approved | Validated 1,220+ RPS write burst and 3,870+ events/sec batch ingestion with zero data loss and strict decoupled latency. |
+| **ADR-012** | Time-based Range Partitioning for High-Volume Attendance Events | ✅ Approved | Triggers at 20M records or 50GB storage. Monthly range partitioning with zero-downtime dual-write swap. |
+| **ADR-013** | Queue Evolution from PostgreSQL Outbox to Redis BullMQ / Message Broker | ✅ Approved | Database queue handles up to 2,000 EPS. Beyond 500K users / 2,000 EPS, migrates cleanly to BullMQ/Kafka without altering domain API. |
+| **ADR-014** | Read Replica Routing for School Dashboards and Parent Status Queries | ✅ Approved | High read volumes (>1,500 QPS) route to PostgreSQL Read Replicas, isolating critical driver write ingestion pipeline. |

@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: outbox-worker
+  labels:
+    app: outbox-worker
+    tier: worker
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: outbox-worker
+  template:
+    metadata:
+      labels:
+        app: outbox-worker
+        tier: worker
+    spec:
+      containers:
+        - name: worker
+          image: ghcr.io/school-transport/outbox-worker:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+          resources:
+            requests:
+              cpu: "150m"
+              memory: "192Mi"
+            limits:
+              cpu: "500m"
+              memory: "384Mi"

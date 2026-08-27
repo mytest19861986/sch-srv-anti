@@ -1,0 +1,48 @@
+# ==========================================
+# Multi-Stage Production Dockerfile for Backend API
+# Target: High-performance, lightweight, secure distroless image
+# ==========================================
+
+# 1. Build Stage
+FROM oven/bun:1.2-alpine AS builder
+WORKDIR /app
+
+# Copy dependency specifications
+COPY package.json bun.lock tsconfig.json ./
+
+# Install all dependencies (including devDependencies for build)
+RUN bun install --frozen-lockfile
+
+# Copy source code
+COPY src ./src
+
+# Build production bundle
+RUN bun build ./src/index.ts --outdir ./dist --target node
+
+# 2. Production Runtime Stage
+FROM oven/bun:1.2-alpine AS runner
+WORKDIR /app
+
+# Set production environment
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Create non-root system user for security
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Copy built artifacts and production dependencies only
+COPY package.json bun.lock ./
+RUN bun install --production --frozen-lockfile
+
+COPY --from=builder /app/dist ./dist
+
+# Switch to unprivileged user
+USER appuser
+
+EXPOSE 3000
+
+# Health check probe
+HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://127.0.0.1:3000/health || exit 1
+
+ENTRYPOINT ["bun", "run", "dist/index.js"]
