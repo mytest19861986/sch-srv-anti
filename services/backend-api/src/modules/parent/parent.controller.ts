@@ -1,0 +1,120 @@
+import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
+import { TimelineQuerySchema, NotificationHistoryQuerySchema } from './dto/parent-query.dto.js';
+import { ParentService } from './parent.service.js';
+import { AuthService } from '../auth/auth.service.js';
+import { createAuthMiddleware, requireRole } from '../../shared/middleware/auth.middleware.js';
+import { tenantGuard } from '../../shared/middleware/tenant.middleware.js';
+
+export function parentController(parentService: ParentService, authService: AuthService) {
+  const authenticate = createAuthMiddleware(authService);
+  const parentOnly = requireRole('PARENT', 'SUPER_ADMIN');
+
+  return async function (fastify: FastifyInstance, opts: FastifyPluginOptions) {
+    // 1. List Children
+    fastify.get(
+      '/children',
+      {
+        preHandler: [authenticate, tenantGuard, parentOnly]
+      },
+      async (request: FastifyRequest, reply: FastifyReply) => {
+        const tenantId = request.tenantId!;
+        const userId = request.user!.userId;
+        try {
+          const response = await parentService.getChildren(tenantId, userId);
+          return reply.status(200).send(response);
+        } catch (err: any) {
+          if (err.message === 'PARENT_PROFILE_NOT_FOUND') {
+            return reply.status(404).send({ success: false, error: 'NOT_FOUND', message: err.message });
+          }
+          return reply.status(500).send({ success: false, error: 'INTERNAL_SERVER_ERROR', message: err.message });
+        }
+      }
+    );
+
+    // 2. Child Status
+    fastify.get(
+      '/children/:childId/status',
+      {
+        preHandler: [authenticate, tenantGuard, parentOnly]
+      },
+      async (request: FastifyRequest, reply: FastifyReply) => {
+        const { childId } = request.params as { childId: string };
+        const tenantId = request.tenantId!;
+        const userId = request.user!.userId;
+
+        try {
+          const response = await parentService.getChildStatus(tenantId, userId, childId);
+          return reply.status(200).send(response);
+        } catch (err: any) {
+          if (err.message === 'FORBIDDEN_CHILD_ACCESS') {
+            return reply.status(403).send({ success: false, error: 'FORBIDDEN', message: 'Parent is not authorized to access this student (IDOR prevented)' });
+          }
+          if (err.message === 'STUDENT_NOT_FOUND' || err.message === 'PARENT_PROFILE_NOT_FOUND') {
+            return reply.status(404).send({ success: false, error: 'NOT_FOUND', message: err.message });
+          }
+          return reply.status(500).send({ success: false, error: 'INTERNAL_SERVER_ERROR', message: err.message });
+        }
+      }
+    );
+
+    // 3. Child Attendance Timeline
+    fastify.get(
+      '/children/:childId/timeline',
+      {
+        preHandler: [authenticate, tenantGuard, parentOnly]
+      },
+      async (request: FastifyRequest, reply: FastifyReply) => {
+        const { childId } = request.params as { childId: string };
+        const parseResult = TimelineQuerySchema.safeParse(request.query);
+        if (!parseResult.success) {
+          return reply.status(400).send({
+            success: false,
+            error: 'VALIDATION_ERROR',
+            details: parseResult.error.errors.map(e => ({ field: e.path.join('.'), message: e.message }))
+          });
+        }
+
+        const tenantId = request.tenantId!;
+        const userId = request.user!.userId;
+
+        try {
+          const response = await parentService.getChildTimeline(tenantId, userId, childId, parseResult.data);
+          return reply.status(200).send(response);
+        } catch (err: any) {
+          if (err.message === 'FORBIDDEN_CHILD_ACCESS') {
+            return reply.status(403).send({ success: false, error: 'FORBIDDEN', message: 'Parent is not authorized to access this student (IDOR prevented)' });
+          }
+          return reply.status(500).send({ success: false, error: 'INTERNAL_SERVER_ERROR', message: err.message });
+        }
+      }
+    );
+
+    // 4. Parent Notifications History
+    fastify.get(
+      '/notifications',
+      {
+        preHandler: [authenticate, tenantGuard, parentOnly]
+      },
+      async (request: FastifyRequest, reply: FastifyReply) => {
+        const parseResult = NotificationHistoryQuerySchema.safeParse(request.query);
+        if (!parseResult.success) {
+          return reply.status(400).send({
+            success: false,
+            error: 'VALIDATION_ERROR',
+            details: parseResult.error.errors.map(e => ({ field: e.path.join('.'), message: e.message }))
+          });
+        }
+
+        const tenantId = request.tenantId!;
+        const userId = request.user!.userId;
+
+        try {
+          const response = await parentService.getNotifications(tenantId, userId, parseResult.data);
+          return reply.status(200).send(response);
+        } catch (err: any) {
+          return reply.status(500).send({ success: false, error: 'INTERNAL_SERVER_ERROR', message: err.message });
+        }
+      }
+    );
+  };
+}
