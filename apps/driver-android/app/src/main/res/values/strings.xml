@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">راننده سرویس مدرسه</string>
+    <string name="login_title">ورود راننده</string>
+    <string name="email_hint">ایمیل سازمانی</string>
+    <string name="password_hint">رمز عبور</string>
+    <string name="login_button">ورود به سامانه</string>
+    <string name="manifest_title">لیست دانش‌آموزان سرویس</string>
+    <string name="status_not_recorded">در انتظار</string>
+    <string name="status_queued">در صف ارسال</string>
+    <string name="status_syncing">در حال ارسال…</string>
+    <string name="status_synced">همگام‌سازی شد</string>
+    <string name="status_conflict">تداخل وضعیت</string>
+    <string name="status_failed">خطای ارسال</string>
+    <string name="btn_picked_up">سوار شد</string>
+    <string name="btn_dropped_off">پیاده شد</string>
+    <string name="btn_absent">غیبت</string>
+    <string name="sync_now">همگام‌سازی دستی</string>
+</resources>
