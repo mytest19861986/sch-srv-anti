@@ -140,6 +140,23 @@ export class AuthService {
     });
 
     const { passwordHash, ...userWithoutPassword } = user;
-    return { access_token: token, user: userWithoutPassword };
+    return {
+      access_token: token,
+      user: userWithoutPassword
+    };
+  }
+
+  async register(user: { id: string; email: string; password: string; role: UserRole; tenantId: string; fullName?: string }): Promise<User> {
+    const hash = await this.hashPassword(user.password);
+    return this.userRepo.create({
+      id: user.id,
+      email: user.email,
+      passwordHash: hash,
+      fullName: user.fullName || user.email,
+      role: user.role,
+      tenantId: user.tenantId,
+      isActive: 'true',
+      createdAt: new Date()
+    });
   }
 }
