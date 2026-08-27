@@ -1,6 +1,14 @@
-# 🚌 School Transport Platform (سامانه جامع مدیریت سرویس مدارس)
+# سرویس یار (ServiceYar) — سامانه یکپارچه مدیریت سرویس و تردد مدارس
+> دامنه رسمی: [serviceyar.ir](https://serviceyar.ir) | نسخه: `v1.0.0-rc.2` | معماری: Event-Driven & Offline-First
 
-An enterprise-grade, offline-first, multi-tenant school transport management platform built with high throughput event-sourcing principles, Zero-Trust multi-tenancy, and decoupled asynchronous notifications.
+سامانه «سرویس یار» یک پلتفرم جامع، چندمستأجری (Multi-Tenant) و مقیاس‌پذیر برای مانیتورینگ زنده، مدیریت ناوگان و تضمین امنیت سفرهای دانش‌آموزی مدارس در سراسر کشور است.
+
+## 🌟 اجزای اصلی سامانه سرویس یار:
+1. **پنل وب مدرسه (School Admin Web)**: داشبورد بلادرنگ تردد، وضعیت ناوگان، گزارش رویدادها و سایدبار RTL راست‌چین.
+2. **پنل راهبری مرکزی (Super Admin Web)**: مدیریت تننت‌ها، تخصیص مجوزهای RBAC و نظارت بر سلامت کلان زیرساخت کشور.
+3. **اپلیکیشن رانندگان (Driver Android APK)**: کلاینت موبایل آفلاین‌محور با همگام‌سازی دسته‌ای، مانیفست مسافران و ثبت رخدادها.
+4. **اپلیکیشن اولیا (Parent Android APK)**: رصد زنده موقعیت سرویس، خط زمانی تردد فرزندان و نوتیفیکیشن‌های فوری.
+5. **هسته API و پردازش رویدادها (Backend Core API)**: موتور بدون وضعیت Fastify، صف Transactional Outbox و تطبیق داده‌های تردد.
 
 ---
 

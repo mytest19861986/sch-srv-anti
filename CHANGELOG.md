@@ -4,6 +4,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [1.0.0-rc.2] - 2026-08-27
+### Added
+- **Official Branding & Domain**: Established "سرویس یار" (ServiceYar) brand ecosystem under `serviceyar.ir`.
+- **School Admin IA Redesign**: Integrated persistent RTL sidebar, entity lists (`/students`, `/parents`, `/drivers`, `/vehicles`, `/routes`, `/services`), and report pages (`/reports/events`, `/reports/audit-logs`, `/reports/notifications`).
+- **Super Admin IA Redesign**: Added comprehensive platform administration sidebar with tenant lifecycle management, global user filtering, platform settings editor, and growth metrics.
+- **Mobile Android Releases**: Generated installable APK artifacts for Driver and Parent apps.
+- **Protocol v3 Evidence**: Captured high-resolution UI snapshots across all authenticated routes.
+
 ## [1.0.0-rc.1] - 2026-08-27 (Phase 17 & 18: Production Deployment & Final Handoff)
 ### Added
 - **Order #13 (Stage 17):** Multi-stage Dockerfiles for Backend API and Outbox Worker.

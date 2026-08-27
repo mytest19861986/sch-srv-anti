@@ -3,8 +3,8 @@ import "./globals.css";
 import { Sidebar } from "../components/Sidebar";
 
 export const metadata = {
-  title: "داشبورد مدیریت سرویس مدرسه",
-  description: "سامانه مانیتورینگ زنده و گزارش‌گیری سرویس مدارس",
+  title: "سرویس یار | پنل مدیریت مدرسه",
+  description: "سامانه هوشمند مانیتورینگ و مدیریت تردد دانش‌آموزی مدارس (ServiceYar)",
 };
 
 export default function RootLayout({

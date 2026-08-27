@@ -3,8 +3,8 @@ import "./globals.css";
 import { Sidebar } from "../components/Sidebar";
 
 export const metadata = {
-  title: "پنل راهبری مرکزی پلتفرم (Super Admin)",
-  description: "مدیریت سراسری مدارس، کاربران، و لاگ‌های امنیتی پلتفرم حمل و نقل هوشمند دانش‌آموزی",
+  title: "سرویس یار | پنل راهبری مرکزی",
+  description: "مدیریت سراسری مدارس، کاربران، و لاگ‌های امنیتی پلتفرم هوشمند سرویس یار (ServiceYar)",
 };
 
 export default function RootLayout({

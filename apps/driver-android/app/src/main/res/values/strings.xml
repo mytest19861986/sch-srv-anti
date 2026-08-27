@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">راننده سرویس مدرسه</string>
-    <string name="login_title">ورود راننده</string>
+    <string name="app_name">سرویس یار - راننده</string>
+    <string name="login_title">ورود به سرویس یار رانندگان</string>
     <string name="email_hint">ایمیل سازمانی</string>
     <string name="password_hint">رمز عبور</string>
     <string name="login_button">ورود به سامانه</string>

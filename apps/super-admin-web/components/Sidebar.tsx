@@ -67,8 +67,8 @@ export function Sidebar() {
             🛡️
           </div>
           <div>
-            <div className="font-extrabold text-sm text-white tracking-tight">راهبری کل پلتفرم</div>
-            <div className="text-[11px] text-purple-400 font-medium">Super Admin Console</div>
+            <div className="font-extrabold text-sm text-white tracking-tight">سرویس یار</div>
+            <div className="text-[11px] text-purple-400 font-medium">راهبری کلان پلتفرم (Super Admin)</div>
           </div>
         </div>
 

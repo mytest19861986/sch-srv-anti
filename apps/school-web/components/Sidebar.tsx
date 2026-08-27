@@ -1,8 +1,7 @@
-"use client";
-
 import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { BRANDING } from "../config/branding";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -61,12 +60,12 @@ export function Sidebar() {
       <div className="p-4 space-y-6 overflow-y-auto">
         {/* Brand Header */}
         <div className="flex items-center gap-3 px-2 py-3 border-b border-slate-800/80">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-xl shadow-inner">
-            🏫
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-xl shadow-inner">
+            🚌
           </div>
           <div>
-            <div className="font-extrabold text-sm text-white tracking-tight">مدرسه مهر آفرین</div>
-            <div className="text-[11px] text-emerald-400 font-medium">پنل مدیریت سرویس</div>
+            <div className="font-extrabold text-sm text-white tracking-tight">{BRANDING.productName}</div>
+            <div className="text-[11px] text-blue-400 font-medium">{BRANDING.schoolPanelName}</div>
           </div>
         </div>
 
