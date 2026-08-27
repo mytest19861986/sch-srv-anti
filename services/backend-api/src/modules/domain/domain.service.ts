@@ -46,6 +46,20 @@ export interface DriverManifestItem {
   grade: string;
   attendance_status: string;
   parent_phones: string[];
+  contact_phone?: string;
+  reported_absent?: boolean;
+  absence_reason?: string;
+}
+
+export interface AbsenceReport {
+  id: string;
+  tenantId: string;
+  childId: string;
+  parentId: string;
+  date: string;
+  reason?: string;
+  createdAt: Date;
+  readByDriver?: boolean;
 }
 
 export class InMemoryDomainRepository {
@@ -58,6 +72,7 @@ export class InMemoryDomainRepository {
   shifts = new Map<string, Shift>();
   driverShiftAssignments = new Map<string, any>(); // "tenantId:driverId:shiftId"
   routeStudentAssignments = new Map<string, any>(); // "tenantId:routeId:studentId"
+  absenceReports = new Map<string, AbsenceReport>();
 
   // Students
   async createStudent(student: Student): Promise<Student> {
@@ -195,6 +210,16 @@ export class InMemoryDomainRepository {
     return students;
   }
 
+  // Absence Reports (P1-2)
+  async recordAbsenceReport(report: AbsenceReport): Promise<AbsenceReport> {
+    this.absenceReports.set(`${report.tenantId}:${report.childId}:${report.date}`, report);
+    return report;
+  }
+
+  isStudentReportedAbsent(tenantId: string, childId: string, date: string): boolean {
+    return this.absenceReports.has(`${tenantId}:${childId}:${date}`);
+  }
+
   // Driver Manifest Query
   async getDriverManifest(
     tenantId: string,
@@ -229,6 +254,7 @@ export class InMemoryDomainRepository {
 
     const assignedStudents = await this.getStudentsForRoute(tenantId, route.id);
 
+    const todayDateStr = new Date().toISOString().split('T')[0];
     const manifestStudents: DriverManifestItem[] = [];
     for (const s of assignedStudents) {
       const parents = await this.getParentsForStudent(tenantId, s.id);
@@ -237,13 +263,19 @@ export class InMemoryDomainRepository {
         .filter(e => e.tenantId === tenantId && e.studentId === s.id && e.serviceId === service.id)
         .sort((a, b) => new Date(b.clientTimestamp).getTime() - new Date(a.clientTimestamp).getTime())[0];
 
+      const isReportedAbsent = this.isStudentReportedAbsent(tenantId, s.id, todayDateStr);
+      const primaryPhone = parents[0]?.phoneNumber || '09121234567';
+
       manifestStudents.push({
         student_id: s.id,
         first_name: s.firstName,
         last_name: s.lastName,
         grade: s.grade,
-        attendance_status: latestEvent ? latestEvent.eventType : 'NOT_MARKED',
-        parent_phones: parents.map(p => p.phoneNumber)
+        attendance_status: latestEvent ? latestEvent.eventType : (isReportedAbsent ? 'ABSENT' : 'NOT_MARKED'),
+        parent_phones: parents.map(p => p.phoneNumber),
+        contact_phone: primaryPhone,
+        reported_absent: isReportedAbsent,
+        absence_reason: isReportedAbsent ? 'اعلام عدم حضور توسط والد' : undefined
       });
     }
 

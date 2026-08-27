@@ -120,8 +120,8 @@ export function buildApp(opts: AppOptions = {}): {
     prefix: '/api/v1/dashboard'
   });
 
-  // Register Parent Module with Device Token endpoints
-  app.register(parentController(parentService, authService, deviceTokenRepository), {
+  // Register Parent Module with Device Token endpoints and Absence Reports (P1-2)
+  app.register(parentController(parentService, authService, deviceTokenRepository, domainRepository), {
     prefix: '/api/v1/parent'
   });
 

@@ -7,6 +7,8 @@ import { AuthService } from '../auth/auth.service.js';
 import { createAuthMiddleware, requireRole } from '../../shared/middleware/auth.middleware.js';
 import { tenantGuard } from '../../shared/middleware/tenant.middleware.js';
 
+import { InMemoryDomainRepository } from '../domain/domain.service.js';
+
 export const RegisterDeviceSchema = z.object({
   token: z.string().min(5, 'device token is required'),
   platform: z.enum(['ANDROID', 'IOS', 'WEB'], {
@@ -17,7 +19,8 @@ export const RegisterDeviceSchema = z.object({
 export function parentController(
   parentService: ParentService,
   authService: AuthService,
-  deviceTokenRepo?: InMemoryDeviceTokenRepository
+  deviceTokenRepo?: InMemoryDeviceTokenRepository,
+  domainRepo?: InMemoryDomainRepository
 ) {
   const authenticate = createAuthMiddleware(authService);
   const parentOnly = requireRole('PARENT', 'SUPER_ADMIN');
@@ -208,5 +211,51 @@ export function parentController(
         }
       }
     );
+
+    // 7. Absence Report by Parent (P1-2)
+    const handleAbsenceReport = async (request: FastifyRequest, reply: FastifyReply) => {
+      const body = request.body as { child_id?: string; student_id?: string; date?: string; reason?: string };
+      const childId = body.child_id || body.student_id;
+      if (!childId) {
+        return reply.status(400).send({ success: false, error: 'child_id is required' });
+      }
+      const tenantId = request.tenantId!;
+      const userId = request.user!.userId;
+      const dateStr = body.date || new Date().toISOString().split('T')[0];
+
+      try {
+        // RBAC: Verify that the parent owns this child
+        await parentService.getChildStatus(tenantId, userId, childId);
+
+        if (domainRepo) {
+          await domainRepo.recordAbsenceReport({
+            id: `abs-${Date.now()}`,
+            tenantId,
+            childId,
+            parentId: userId,
+            date: dateStr,
+            reason: body.reason || 'گزارش عدم حضور توسط ولی',
+            createdAt: new Date()
+          });
+        }
+
+        return reply.status(201).send({
+          success: true,
+          message: 'عدم حضور دانش‌آموز با موفقیت ثبت شد و در مانیفست راننده علامت‌گذاری گردید.',
+          child_id: childId,
+          date: dateStr,
+          status: 'ABSENT',
+          reported_by: userId
+        });
+      } catch (err: any) {
+        if (err.message === 'FORBIDDEN_CHILD_ACCESS') {
+          return reply.status(403).send({ success: false, error: 'FORBIDDEN', message: 'تنها والد قانونی امکان ثبت عدم حضور این دانش‌آموز را دارد.' });
+        }
+        return reply.status(500).send({ success: false, error: err.message });
+      }
+    };
+
+    fastify.post('/absence-report', { preHandler: [authenticate, tenantGuard, parentOnly] }, handleAbsenceReport);
+    fastify.post('/absence-reports', { preHandler: [authenticate, tenantGuard, parentOnly] }, handleAbsenceReport);
   };
 }
