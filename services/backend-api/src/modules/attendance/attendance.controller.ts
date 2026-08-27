@@ -5,6 +5,7 @@ import { AuthService } from '../auth/auth.service.js';
 import { InMemoryDomainRepository } from '../domain/domain.service.js';
 import { createAuthMiddleware, requireRole } from '../../shared/middleware/auth.middleware.js';
 import { tenantGuard } from '../../shared/middleware/tenant.middleware.js';
+import { metricsService } from '../../shared/observability/metrics.service.js';
 
 export function attendanceController(
   attendanceService: AttendanceService,
@@ -34,12 +35,16 @@ export function attendanceController(
           });
         }
 
+        const startTime = performance.now();
         try {
           const tenantId = request.tenantId!;
           const response = await attendanceService.recordAttendance(parseResult.data, tenantId);
           const statusCode = response.is_idempotent_replay ? 200 : 201;
+          const duration = performance.now() - startTime;
+          metricsService.recordAttendanceWriteSuccess(duration);
           return reply.status(statusCode).send(response);
         } catch (err: any) {
+          metricsService.recordAttendanceWriteError('INGESTION_ERROR');
           request.log.error(err);
           return reply.status(500).send({
             success: false,

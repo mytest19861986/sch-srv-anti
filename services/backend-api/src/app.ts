@@ -16,6 +16,9 @@ import { parentController } from './modules/parent/parent.controller.js';
 import { AuditService } from './modules/super-admin/audit.service.js';
 import { SuperAdminService } from './modules/super-admin/super-admin.service.js';
 import { superAdminController } from './modules/super-admin/super-admin.controller.js';
+import { registerTracingMiddleware } from './shared/observability/tracing.middleware.js';
+import { healthController } from './shared/health/health.controller.js';
+import { QueueMonitorService } from './shared/observability/queue-monitor.service.js';
 
 export interface AppOptions {
   attendanceRepository?: IAttendanceRepository;
@@ -39,6 +42,7 @@ export function buildApp(opts: AppOptions = {}): {
   queueService: IOutboxQueueService;
   notificationService: NotificationService;
   outboxWorker: OutboxWorkerService;
+  queueMonitor: QueueMonitorService;
   syncService: SyncService;
   dashboardService: DashboardService;
   parentService: ParentService;
@@ -50,6 +54,9 @@ export function buildApp(opts: AppOptions = {}): {
   const app = Fastify({
     logger: opts.logger ?? false
   });
+
+  // 1. Tracing & Request Observability Hook
+  registerTracingMiddleware(app);
 
   const domainRepository = opts.domainRepository ?? new InMemoryDomainRepository();
   const attendanceRepository = opts.attendanceRepository ?? new InMemoryAttendanceRepository();
@@ -78,12 +85,15 @@ export function buildApp(opts: AppOptions = {}): {
     batchSize: 50
   });
 
+  const queueMonitor = new QueueMonitorService(queueService, 1000);
+
   if (opts.startWorker) {
     outboxWorker.start();
+    queueMonitor.start();
   }
 
-  // Health check endpoint
-  app.get('/health', async () => ({ status: 'OK', timestamp: new Date().toISOString() }));
+  // Health Checks & Metrics
+  app.register(healthController(queueService), { prefix: '/health' });
 
   // Register Auth Module
   app.register(authController(authService), { prefix: '/api/v1/auth' });
@@ -116,6 +126,7 @@ export function buildApp(opts: AppOptions = {}): {
   // Graceful hook
   app.addHook('onClose', async () => {
     outboxWorker.stop();
+    queueMonitor.stop();
   });
 
   return {
@@ -126,6 +137,7 @@ export function buildApp(opts: AppOptions = {}): {
     queueService,
     notificationService,
     outboxWorker,
+    queueMonitor,
     syncService,
     dashboardService,
     parentService,
