@@ -43,6 +43,7 @@ services:
       - ../../packages:/app/packages:ro
     environment:
       - PORT=3000
+      - HOST=0.0.0.0
       - NODE_ENV=development
       - DATABASE_URL=postgres://school_user:school_secret_pass@postgres-primary:5432/school_transport
       - DATABASE_REPLICA_URL=postgres://school_user:school_secret_pass@postgres-replica:5432/school_transport
@@ -61,10 +62,11 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health/live"]
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:3000/health/live || exit 1"]
       interval: 5s
-      timeout: 3s
-      retries: 5
+      timeout: 5s
+      retries: 10
+      start_period: 25s
 
   # 3. School Web Dashboard
   school-web:
@@ -84,10 +86,11 @@ services:
       backend-api:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001"]
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:3001 || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 6
+      start_period: 40s
 
   # 4. Super Admin Web Dashboard
   super-admin-web:
@@ -107,10 +110,11 @@ services:
       backend-api:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3002"]
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:3002 || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 6
+      start_period: 40s
 
   # 5. Outbox Worker Service
   outbox-worker:
@@ -151,7 +155,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -U school_user -d school_transport"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 6
+      start_period: 10s
 
   # 7. PostgreSQL Replica (Read-Only)
   postgres-replica:
@@ -186,6 +191,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+      start_period: 5s
 
   # 9. LocalStack (S3 Object Storage Emulator)
   localstack:
