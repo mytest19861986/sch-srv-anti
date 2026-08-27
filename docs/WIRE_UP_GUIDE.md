@@ -40,18 +40,23 @@ This guide provides explicit, step-by-step instructions for transitioning from t
    apiVersion: cert-manager.io/v1
    kind: Certificate
    metadata:
-     name: school-tls
-     namespace: school-transport
+      name: school-tls
+      namespace: school-transport
    spec:
-     secretName: school-tls-secret
-     issuerRef:
-       name: letsencrypt-prod
-       kind: ClusterIssuer
-     dnsNames:
-       - api.schooltransport.ir
+      secretName: school-tls-secret
+      issuerRef:
+        name: letsencrypt-prod
+        kind: ClusterIssuer
+      dnsNames:
+        - api.schooltransport.ir
    ```
 
-### 3.3. Verification Checklist After Wire-up
+### 3.3. Production Cookie Hardening (Order #30 Hardening Note)
+- In development/demo, session cookies are configured with `secure: false, sameSite: 'lax'`.
+- In production with TLS/HTTPS enabled, update Next.js auth proxy cookies (`apps/school-web/app/api/auth/login/route.ts` and `apps/super-admin-web/app/api/auth/login/route.ts`) to:
+  `secure: true, sameSite: 'strict', httpOnly: true`.
+
+### 3.4. Verification Checklist After Wire-up
 - [ ] Send test push notification: verify receipt on Android physical device within 2 seconds.
 - [ ] Inspect Nginx TLS 1.3 handshake with `curl -I https://api.schooltransport.ir/health/live`.
 - [ ] Verify Redis cache hit ratio via `redis-cli info stats`.

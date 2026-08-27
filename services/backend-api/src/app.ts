@@ -17,6 +17,7 @@ import { InMemoryDeviceTokenRepository } from './modules/parent/device-token.ser
 import { AuditService } from './modules/super-admin/audit.service.js';
 import { SuperAdminService } from './modules/super-admin/super-admin.service.js';
 import { superAdminController } from './modules/super-admin/super-admin.controller.js';
+import { adminController } from './modules/admin/admin.controller.js';
 import { registerTracingMiddleware } from './shared/observability/tracing.middleware.js';
 import { healthController } from './shared/health/health.controller.js';
 import { QueueMonitorService } from './shared/observability/queue-monitor.service.js';
@@ -127,6 +128,11 @@ export function buildApp(opts: AppOptions = {}): {
   // Register Super Admin Module
   app.register(superAdminController(superAdminService, auditService, authService), {
     prefix: '/api/v1/super-admin'
+  });
+
+  // Register School Admin Tenant Module (Order #31)
+  app.register(adminController(authService, domainRepository, attendanceRepository, auditService), {
+    prefix: '/api/v1/admin'
   });
 
   // Graceful hook
