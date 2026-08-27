@@ -132,6 +132,11 @@ export function superAdminController(
       return reply.status(200).send(overview);
     });
 
+    fastify.get('/platform-overview', { preHandler: [authenticate, superAdminOnly] }, async (request, reply) => {
+      const overview = await superAdminService.getPlatformOverview();
+      return reply.status(200).send(overview);
+    });
+
     // 5. Platform Settings
     fastify.get('/settings', { preHandler: [authenticate, superAdminOnly] }, async (request, reply) => {
       const settings = await superAdminService.getSettings();
