@@ -1,84 +1,77 @@
-# سرویس یار (ServiceYar) — سامانه یکپارچه مدیریت سرویس و تردد مدارس
-> دامنه رسمی: [serviceyar.ir](https://serviceyar.ir) | نسخه: `v1.0.0-rc.2` | معماری: Event-Driven & Offline-First
+# سرویس یار — سامانه جامع هوشمند مدیریت ناوگان سرویس مدارس
 
-سامانه «سرویس یار» یک پلتفرم جامع، چندمستأجری (Multi-Tenant) و مقیاس‌پذیر برای مانیتورینگ زنده، مدیریت ناوگان و تضمین امنیت سفرهای دانش‌آموزی مدارس در سراسر کشور است.
+[![Build & Test Status](https://img.shields.io/badge/tests-97%20passed-success)](https://github.com/mytest19861986/sch-srv-anti)
+[![Release Version](https://img.shields.io/badge/release-v1.0.0--alpha-blue)](https://github.com/mytest19861986/sch-srv-anti/releases/tag/v1.0.0)
+[![Architecture](https://img.shields.io/badge/architecture-Zero--Trust%20Multi--Tenant-purple)](docs/ARCHITECTURE.md)
 
-## 🌟 اجزای اصلی سامانه سرویس یار:
-1. **پنل وب مدرسه (School Admin Web)**: داشبورد بلادرنگ تردد، وضعیت ناوگان، گزارش رویدادها و سایدبار RTL راست‌چین.
-2. **پنل راهبری مرکزی (Super Admin Web)**: مدیریت تننت‌ها، تخصیص مجوزهای RBAC و نظارت بر سلامت کلان زیرساخت کشور.
-3. **اپلیکیشن رانندگان (Driver Android APK)**: کلاینت موبایل آفلاین‌محور با همگام‌سازی دسته‌ای، مانیفست مسافران و ثبت رخدادها.
-4. **اپلیکیشن اولیا (Parent Android APK)**: رصد زنده موقعیت سرویس، خط زمانی تردد فرزندان و نوتیفیکیشن‌های فوری.
-5. **هسته API و پردازش رویدادها (Backend Core API)**: موتور بدون وضعیت Fastify، صف Transactional Outbox و تطبیق داده‌های تردد.
+**سرویس یار** یک پلتفرم جامع، چندمستاجری (Multi-Tenant) و بلادرنگ برای مدیریت یکپارچه رفت‌وآمد دانش‌آموزان، مانیتورینگ زنده ناوگان، اطلاع‌رسانی پیامکی و نوتیفیکیشن به والدین و کنترل مالی/حسابداری سرویس مدارس است.
 
 ---
 
-## ⚡ Quick Demo Launch (اجرای دمو فقط با Docker Desktop)
+## 📦 دانلود مستقیم نسخه‌های رسمی (Official Downloads v1.0.0)
 
-> [!NOTE]
-> **تنها پیش‌نیاز سیستم**: نرم‌افزار **Docker Desktop**.  
-> نصب Node.js، Bun یا هیچ وابستگی دیگری روی سیستم میزبان نیاز نیست (تمام سرویس‌ها، دیتابیس‌ها و داشبوردها به صورت کانتینری در داکر اجرا می‌شوند).
+| محصول | فرمت | لینک دانلود مستقیم |
+|---|---|---|
+| 🚐 **اپلیکیشن راننده** | APK | [دانلود مستقیم ir.serviceyar.driver-v1.0.0.apk](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/docs/releases/ir.serviceyar.driver-v1.0.0.apk) |
+| 👨‍👩‍👧 **اپلیکیشن والدین** | APK | [دانلود مستقیم ir.serviceyar.parent-v1.0.0.apk](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/docs/releases/ir.serviceyar.parent-v1.0.0.apk) |
+| 🎬 **ویدئوی دموی رسمی** | MP4 | [دانلود مستقیم demo-video.mp4](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/docs/releases/demo-video.mp4) |
+| 🏷️ **صفحه رسمی Release** | GitHub | [مشاهده Release v1.0.0](https://github.com/mytest19861986/sch-srv-anti/releases/tag/v1.0.0) |
 
-### 🚀 نحوه اجرا در ویندوز (Git Bash) / مک / لینوکس:
+---
 
+## ⚡ راه‌اندازی سریع (Quick Start)
+
+### ۱. اجرای یکپارچه با Docker Compose
 ```bash
-# 1. دریافت آخرین تغییرات مخزن
+# کلون پروژه و راه‌اندازی تمام سرویس‌ها
 git clone https://github.com/mytest19861986/sch-srv-anti.git
 cd sch-srv-anti
+docker compose -f docker-compose.dev.yml up --build -d
+```
 
-# 2. اجرای تک‌دستوری دمو
-./demo.sh
+### ۲. اجرای مستقیم با Bun / Node.js
+```bash
+# نصب وابستگی‌ها
+bun install
+
+# اجرای بک‌اند API
+cd services/backend-api && bun run dev
+
+# اجرای پنل وب مدرسه (پورت ۳۰۰۱)
+cd apps/school-web && bun run dev
+
+# اجرای پنل وب مدیر کل پلتفرم (پورت ۳۰۰۰)
+cd apps/super-admin-web && bun run dev
 ```
 
 ---
 
-### 📱 درگاه‌های دسترسی به وب و سرویس‌ها:
+## 🔑 اعتبارنامه‌های حساب‌های پیش‌فرض دمو (Demo Credentials)
 
-| سرویس / داشبورد | نشانی مرورگر (URL) | پورت | وضعیت |
-| :--- | :--- | :--- | :--- |
-| 🏫 **داشبورد مدیریت مدرسه (School Web)** | [http://localhost:3001](http://localhost:3001) | `3001` | ✅ کانتینری‌شده |
-| 🏢 **پنل راهبری مرکزی (Super Admin)** | [http://localhost:3002](http://localhost:3002) | `3002` | ✅ کانتینری‌شده |
-| 🛡️ **درگاه ارتباطی Nginx Reverse Proxy** | [http://localhost:80](http://localhost:80) | `80` | ✅ لود بالانسر |
-| 🚀 **سرویس مستقیم Backend API** | [http://localhost:3000](http://localhost:3000) | `3000` | ✅ Fastify / Bun |
-| 📦 **شبیه‌ساز ذخیره‌سازی ابری LocalStack** | [http://localhost:9566](http://localhost:9566) | `9566` | ✅ S3 Emulator |
-
----
-
-### 🔑 اطلاعات ورود کاربران دمو (فقط برای تست محلی):
-
-| نقش کاربری | نام کاربری (Email) | کلمه عبور | دسترسی‌ها |
-| :--- | :--- | :--- | :--- |
-| 🛡️ **Super Admin** | `super-admin@platform.ir` | `Demo@1234` | مدیریت کل مدارس، کاربران، تننت‌ها و لاگ‌ها |
-| 🏫 **School Admin** | `school-admin@demo.ir` | `Demo@1234` | مانیتورینگ زنده سرویس‌ها، غیبت‌ها و بنر Stale |
-| 🚐 **Driver** | `driver@demo.ir` | `Demo@1234` | دریافت مانیفست و ثبت سوار/پیاده شدن |
-| 👨‍👩‍👧 **Parent** | `parent@demo.ir` | `Demo@1234` | مشاهده تایم‌لاین زنده و وضعیت فرزندان |
+| نقش کاربری | نام کاربری / ایمیل | رمز عبور | دسترسی مجاز |
+|---|---|---|---|
+| 🛡️ **مدیر کل (Super Admin)** | `admin@platform.ir` | `SuperPass@123` | پنل راهبری کلان کشوری (`/tenants`, `/audit-logs`) |
+| 🏢 **مدیر مدرسه (School Admin)** | `school@mehr.ir` | `SchoolPass@123` | پنل مدرسه (`/students`, `/parents`, `/drivers`, `/routes`) |
+| 🚐 **راننده (Driver)** | `driver@serviceyar.ir` | `DriverPass@123` | اپلیکیشن اندروید راننده و مانیفست تردد |
+| 👨‍👩‍👧 **ولی دانش‌آموز (Parent)** | `parent@serviceyar.ir` | `ParentPass@123` | اپلیکیشن اندروید والدین و وضعیت زنده سرویس |
 
 ---
 
-### ⏹️ دستورات مدیریت دمو:
-- **توقف سرویس‌ها**: `./demo.sh stop`
-- **ریست کامل دیتابیس و کانتینرها**: `./demo.sh reset`
+## 🏗️ نقشه مستندات فنی و ساختار پروژه (Documentation Map)
+
+- 📐 [معماری سیستم و الگوهای ایزولاسیون تننت](docs/ARCHITECTURE.md)
+- 🔐 [مستندات احراز هویت و Zero-Trust Security](docs/SECURITY_AUTH_GATE.md)
+- 🗺️ [نقشه راه فاز بعد از پایلوت (Post-Pilot Roadmap)](docs/POST_PILOT_ROADMAP.md)
+- 🎨 [راهنمای برندینگ و استایل سازمانی](docs/BRANDING.md)
+- 📸 [گالری اسکرین‌شات‌های زنده سیستم](docs/screenshots/)
+- 🗄️ [یادداشت بایگانی اسناد طراحی اولیه](docs/ARCHIVE_NOTE.md)
 
 ---
 
-## 🧪 تست و اعتبارسنجی خودکار
+## 🧪 اجرای آزمون‌های خودکار (Automated Tests)
 
 ```bash
-# تست اعتبارسنجی لاگین ۴ کاربر دمو و پروب‌های سلامت (۸ تست)
-bun test tests/e2e/demo-verification.test.ts
-
-# تست جامع سناریوهای سرتاسری E2E (۸ تست)
-bun test tests/e2e/e2e-scenarios.test.ts
-
-# تست‌های یکپارچگی بک‌اند (۵۲ تست)
-bun test services/backend-api
-
-# تست‌های پکیج‌های اشتراکی مونو‌ریپو (۷ تست)
-bun test packages/i18n packages/auth packages/api-client
+cd services/backend-api
+bun test
+# خروجی: 97+ تست سبز با پوشش کامل اعتبارسنجی، ایزولاسیون و احراز هویت
 ```
-
----
-
-## 📚 مستندات کامل مهندسی
-- 📖 [راهنمای جامع اتصال اعتبارنامه‌های واقعی (Wire-Up Guide)](docs/WIRE_UP_GUIDE.md)
-- 📋 [چک‌لیست تحویل نهایی پلتفرم (Handoff Checklist)](docs/HANDOFF_CHECKLIST.md)
-- 🚀 [مستندات استقرار Production و SRE Runbooks](docs/DEPLOYMENT.md)
