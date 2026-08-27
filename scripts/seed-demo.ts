@@ -1,6 +1,25 @@
-import { appLogger } from "../services/backend-api/src/shared/observability/logger.service";
-import { AuthService, InMemoryUserRepository } from "../services/backend-api/src/modules/auth/auth.service";
-import { InMemoryDomainRepository } from "../services/backend-api/src/modules/domain/domain.service";
+let appLogger: any;
+let AuthService: any;
+let InMemoryUserRepository: any;
+let InMemoryDomainRepository: any;
+
+try {
+  const loggerMod = await import('../src/shared/observability/logger.service');
+  appLogger = loggerMod.appLogger;
+  const authMod = await import('../src/modules/auth/auth.service');
+  AuthService = authMod.AuthService;
+  InMemoryUserRepository = authMod.InMemoryUserRepository;
+  const domainMod = await import('../src/modules/domain/domain.service');
+  InMemoryDomainRepository = domainMod.InMemoryDomainRepository;
+} catch {
+  const loggerMod = await import('../services/backend-api/src/shared/observability/logger.service');
+  appLogger = loggerMod.appLogger;
+  const authMod = await import('../services/backend-api/src/modules/auth/auth.service');
+  AuthService = authMod.AuthService;
+  InMemoryUserRepository = authMod.InMemoryUserRepository;
+  const domainMod = await import('../services/backend-api/src/modules/domain/domain.service');
+  InMemoryDomainRepository = domainMod.InMemoryDomainRepository;
+}
 
 export interface DemoSeedResult {
   users: Array<{ email: string; role: string; tenantId: string; password: string }>;
@@ -9,9 +28,9 @@ export interface DemoSeedResult {
 }
 
 export async function seedDemoData(
-  userRepo?: InMemoryUserRepository,
-  domainRepo?: InMemoryDomainRepository,
-  authService?: AuthService
+  userRepo?: any,
+  domainRepo?: any,
+  authService?: any
 ): Promise<DemoSeedResult> {
   appLogger.info("🌱 Seeding Demo Environment for Order #21 (Quick Demo Launch)...");
 
