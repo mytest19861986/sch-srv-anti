@@ -31,7 +31,7 @@ cd sch-srv-anti
 | 🏢 **پنل راهبری مرکزی (Super Admin)** | [http://localhost:3002](http://localhost:3002) | `3002` | ✅ کانتینری‌شده |
 | 🛡️ **درگاه ارتباطی Nginx Reverse Proxy** | [http://localhost:80](http://localhost:80) | `80` | ✅ لود بالانسر |
 | 🚀 **سرویس مستقیم Backend API** | [http://localhost:3000](http://localhost:3000) | `3000` | ✅ Fastify / Bun |
-| 📦 **شبیه‌ساز ذخیره‌سازی ابری LocalStack** | [http://localhost:4567](http://localhost:4567) | `4567` | ✅ S3 Emulator |
+| 📦 **شبیه‌ساز ذخیره‌سازی ابری LocalStack** | [http://localhost:9566](http://localhost:9566) | `9566` | ✅ S3 Emulator |
 
 ---
 

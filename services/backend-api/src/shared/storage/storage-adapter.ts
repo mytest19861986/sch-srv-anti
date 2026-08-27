@@ -70,7 +70,7 @@ export class S3StorageAdapter implements StorageAdapter {
 
 export function createStorageAdapter(): StorageAdapter {
   if (process.env.STORAGE_TYPE === "s3") {
-    const endpoint = process.env.LOCALSTACK_ENDPOINT || process.env.S3_ENDPOINT || "http://localhost:4567";
+    const endpoint = process.env.LOCALSTACK_ENDPOINT || process.env.S3_ENDPOINT || "http://localhost:9566";
     return new S3StorageAdapter(process.env.S3_BUCKET || "school-transport-assets", endpoint);
   }
   return new LocalStorageAdapter();

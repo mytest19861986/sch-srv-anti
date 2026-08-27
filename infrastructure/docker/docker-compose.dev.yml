@@ -207,7 +207,7 @@ services:
     container_name: school_localstack_s3
     restart: unless-stopped
     ports:
-      - "4567:4566"
+      - "9566:4566"
     environment:
       - SERVICES=s3
       - DEFAULT_REGION=us-east-1

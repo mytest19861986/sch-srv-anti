@@ -82,7 +82,7 @@ USE_READ_REPLICA=false
 REDIS_URL=redis://localhost:6379
 CACHE_ADAPTER=inmemory
 STORAGE_TYPE=local
-LOCALSTACK_ENDPOINT=http://localhost:4567
+LOCALSTACK_ENDPOINT=http://localhost:9566
 S3_BUCKET=school-transport-assets
 NOTIFICATION_ADAPTER=mock
 JWT_SECRET=demo_super_secret_jwt_key_2026
@@ -122,7 +122,7 @@ echo "   🏫 School Web Dashboard:   http://localhost:3001"
 echo "   🏢 Super Admin Dashboard:  http://localhost:3002"
 echo "   ⚡ API Gateway (Nginx):    http://localhost:80"
 echo "   🚀 Backend API Direct:     http://localhost:3000"
-echo "   📦 LocalStack S3 Emulator: http://localhost:4567"
+echo "   📦 LocalStack S3 Emulator: http://localhost:9566"
 echo ""
 echo "🔑 DEMO LOGIN CREDENTIALS (LOCAL USE ONLY):"
 echo "   ┌──────────────────────────┬─────────────────────────┬────────────┐"

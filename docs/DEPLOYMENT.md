@@ -7,7 +7,7 @@ The School Transport Platform is designed as a modular, high-resilience, multi-t
 - **Transactional Outbox Worker**: Decoupled asynchronous notification dispatcher.
 - **PostgreSQL 16 High-Availability Cluster**: Primary (Read/Write on port 5432) with Streaming Replication to Read Replica (port 5433).
 - **Redis 7+ In-Memory Cache**: Sub-millisecond session caching and hot query acceleration with fallback (port 6379).
-- **S3 / LocalStack Storage**: Object storage emulator for CSV/Excel attendance exports and audit archives (Port 4567 on host -> 4566 container).
+- **S3 / LocalStack Storage**: Object storage emulator for CSV/Excel attendance exports and audit archives (Port 9566 on host -> 4566 container).
 
 ---
 
@@ -22,7 +22,7 @@ Service Ports Summary:
 - 🏢 Super Admin Dashboard: `http://localhost:3002`
 - 🚀 Backend API: `http://localhost:3000`
 - 🛡️ Nginx Load Balancer: `http://localhost:80`
-- 📦 LocalStack S3 Emulator: `http://localhost:4567`
+- 📦 LocalStack S3 Emulator: `http://localhost:9566`
 - 🗄️ PostgreSQL Primary: `localhost:5432`
 - ⚡ Redis: `localhost:6379`
 
