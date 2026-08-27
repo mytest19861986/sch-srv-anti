@@ -4,12 +4,16 @@ An enterprise-grade, offline-first, multi-tenant school transport management pla
 
 ---
 
-## ⚡ Quick Demo Launch (اجرای فوری دمو با یک دستور)
+## ⚡ Quick Demo Launch (اجرای دمو فقط با Docker Desktop)
 
-برای اجرای کامل استک دمو همراه با پایگاه داده، ردیس، داشبورد مدرسه و پنل سوپر ادمین تنها کافیست دستور زیر را اجرا کنید:
+> [!NOTE]
+> **تنها پیش‌نیاز سیستم**: نرم‌افزار **Docker Desktop**.  
+> نصب Node.js، Bun یا هیچ وابستگی دیگری روی سیستم میزبان نیاز نیست (تمام سرویس‌ها، دیتابیس‌ها و داشبوردها به صورت کانتینری در داکر اجرا می‌شوند).
+
+### 🚀 نحوه اجرا در ویندوز (Git Bash) / مک / لینوکس:
 
 ```bash
-# 1. کلون ریپازیتوری
+# 1. دریافت آخرین تغییرات مخزن
 git clone https://github.com/mytest19861986/sch-srv-anti.git
 cd sch-srv-anti
 
@@ -17,42 +21,55 @@ cd sch-srv-anti
 ./demo.sh
 ```
 
-### 📱 درگاه‌های دسترسی به وب و API:
-- 🏫 **داشبورد مدیریت مدرسه**: [http://localhost:3001](http://localhost:3001)
-- 🏢 **پنل راهبری Super Admin**: [http://localhost:3002](http://localhost:3002)
-- 🛡️ **درگاه ارتباطی Nginx**: [http://localhost:80](http://localhost:80)
-- 🚀 **سرویس مستقیم Backend API**: [http://localhost:3000](http://localhost:3000)
+---
 
-### 🔑 اطلاعات ورود کاربران دمو (فقط محیط لوکال):
+### 📱 درگاه‌های دسترسی به وب و داشبوردها:
 
-| نقش کاربری | نام کاربری (Email) | کلمه عبور |
-| :--- | :--- | :--- |
-| 🛡️ **Super Admin** | `super-admin@platform.ir` | `Demo@1234` |
-| 🏫 **مدیر مدرسه (School Admin)** | `school-admin@demo.ir` | `Demo@1234` |
-| 🚐 **راننده سرویس (Driver)** | `driver@demo.ir` | `Demo@1234` |
-| 👨‍👩‍👧 **ولی دانش‌آموز (Parent)** | `parent@demo.ir` | `Demo@1234` |
+| سرویس / داشبورد | نشانی مرورگر (URL) | پورت | وضعیت |
+| :--- | :--- | :--- | :--- |
+| 🏫 **داشبورد مدیریت مدرسه (School Web)** | [http://localhost:3001](http://localhost:3001) | `3001` | ✅ کانتینری‌شده |
+| 🏢 **پنل راهبری مرکزی (Super Admin)** | [http://localhost:3002](http://localhost:3002) | `3002` | ✅ کانتینری‌شده |
+| 🛡️ **درگاه ارتباطی Nginx Reverse Proxy** | [http://localhost:80](http://localhost:80) | `80` | ✅ لود بالانسر |
+| 🚀 **سرویس مستقیم Backend API** | [http://localhost:3000](http://localhost:3000) | `3000` | ✅ Fastify / Bun |
+
+---
+
+### 🔑 اطلاعات ورود کاربران دمو (فقط برای تست محلی):
+
+| نقش کاربری | نام کاربری (Email) | کلمه عبور | دسترسی‌ها |
+| :--- | :--- | :--- | :--- |
+| 🛡️ **Super Admin** | `super-admin@platform.ir` | `Demo@1234` | مدیریت کل مدارس، کاربران، تننت‌ها و لاگ‌ها |
+| 🏫 **School Admin** | `school-admin@demo.ir` | `Demo@1234` | مانیتورینگ زنده سرویس‌ها، غیبت‌ها و بنر Stale |
+| 🚐 **Driver** | `driver@demo.ir` | `Demo@1234` | دریافت مانیفست و ثبت سوار/پیاده شدن |
+| 👨‍👩‍👧 **Parent** | `parent@demo.ir` | `Demo@1234` | مشاهده تایم‌لاین زنده و وضعیت فرزندان |
+
+---
+
+### ⏹️ دستورات مدیریت دمو:
+- **توقف سرویس‌ها**: `./demo.sh stop`
+- **ریست کامل دیتابیس و کانتینرها**: `./demo.sh reset`
 
 ---
 
 ## 🧪 تست و اعتبارسنجی خودکار
 
 ```bash
-# اجرای تست‌های اعتبارسنجی دمو و لاگین واقعی
+# تست اعتبارسنجی لاگین ۴ کاربر دمو و پروب‌های سلامت (۸ تست)
 bun test tests/e2e/demo-verification.test.ts
 
-# اجرای تمامی آزمون‌های سرتاسری E2E (۸ سناریو)
+# تست جامع سناریوهای سرتاسری E2E (۸ تست)
 bun test tests/e2e/e2e-scenarios.test.ts
 
-# اجرای آزمون‌های یکپارچگی بک‌اند (۵۲ تست)
+# تست‌های یکپارچگی بک‌اند (۵۲ تست)
 bun test services/backend-api
 
-# اجرای آزمون‌های مونو‌ریپو و پکیج‌های وب (۷ تست)
+# تست‌های پکیج‌های اشتراکی مونو‌ریپو (۷ تست)
 bun test packages/i18n packages/auth packages/api-client
 ```
 
 ---
 
-## 📚 مستندات کامل پلتفرم
-- 📖 [راهنمای جامع اتصال اعتبارنامه‌ها (Wire-Up Guide)](docs/WIRE_UP_GUIDE.md)
+## 📚 مستندات کامل مهندسی
+- 📖 [راهنمای جامع اتصال اعتبارنامه‌های واقعی (Wire-Up Guide)](docs/WIRE_UP_GUIDE.md)
 - 📋 [چک‌لیست تحویل نهایی پلتفرم (Handoff Checklist)](docs/HANDOFF_CHECKLIST.md)
-- 🚀 [مستندات استقرار و SRE Runbooks](docs/DEPLOYMENT.md)
+- 🚀 [مستندات استقرار Production و SRE Runbooks](docs/DEPLOYMENT.md)

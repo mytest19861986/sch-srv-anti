@@ -38,19 +38,19 @@ services:
       dockerfile: Dockerfile
     container_name: school_backend_api
     restart: unless-stopped
+    ports:
+      - "3000:3000"
     environment:
       - PORT=3000
       - NODE_ENV=development
       - DATABASE_URL=postgres://school_user:school_secret_pass@postgres-primary:5432/school_transport
       - DATABASE_REPLICA_URL=postgres://school_user:school_secret_pass@postgres-replica:5432/school_transport
-      - USE_READ_REPLICA=true
+      - USE_READ_REPLICA=false
       - REDIS_URL=redis://redis:6379
-      - CACHE_ADAPTER=redis
-      - STORAGE_TYPE=s3
-      - S3_ENDPOINT=http://localstack:4566
-      - S3_BUCKET=school-transport-assets
+      - CACHE_ADAPTER=inmemory
+      - STORAGE_TYPE=local
       - NOTIFICATION_ADAPTER=mock
-      - JWT_SECRET=production_grade_super_secret_jwt_key_2026
+      - JWT_SECRET=demo_super_secret_jwt_key_2026
     networks:
       - backend-net
       - data-net
@@ -61,11 +61,57 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # 3. School Web Dashboard
+  school-web:
+    build:
+      context: ../../
+      dockerfile: apps/school-web/Dockerfile
+    container_name: school_web_dashboard
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NEXT_PUBLIC_API_URL=http://localhost:3000
+    networks:
+      - backend-net
+    depends_on:
+      backend-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001"]
       interval: 10s
       timeout: 5s
       retries: 3
 
-  # 3. Outbox Worker Service
+  # 4. Super Admin Web Dashboard
+  super-admin-web:
+    build:
+      context: ../../
+      dockerfile: apps/super-admin-web/Dockerfile
+    container_name: super_admin_web_dashboard
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - NEXT_PUBLIC_API_URL=http://localhost:3000
+    networks:
+      - backend-net
+    depends_on:
+      backend-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # 5. Outbox Worker Service
   outbox-worker:
     build:
       context: ../../services/backend-api
@@ -85,7 +131,7 @@ services:
       postgres-primary:
         condition: service_healthy
 
-  # 4. PostgreSQL Primary (Read/Write)
+  # 6. PostgreSQL Primary (Read/Write)
   postgres-primary:
     image: postgres:16-alpine
     container_name: school_pg_primary
@@ -107,7 +153,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # 5. PostgreSQL Replica (Read-Only)
+  # 7. PostgreSQL Replica (Read-Only)
   postgres-replica:
     image: postgres:16-alpine
     container_name: school_pg_replica
@@ -125,7 +171,7 @@ services:
       postgres-primary:
         condition: service_healthy
 
-  # 6. Redis (Cache, Rate Limit & Session Store)
+  # 8. Redis (Cache, Rate Limit & Session Store)
   redis:
     image: redis:7.2-alpine
     container_name: school_redis
@@ -141,7 +187,7 @@ services:
       timeout: 3s
       retries: 5
 
-  # 7. LocalStack (S3 Object Storage Emulator)
+  # 9. LocalStack (S3 Object Storage Emulator)
   localstack:
     image: localstack/localstack:3.0
     container_name: school_localstack_s3
