@@ -40,6 +40,9 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    volumes:
+      - ../../scripts:/app/scripts:ro
+      - ../../packages:/app/packages:ro
     environment:
       - PORT=3000
       - NODE_ENV=development
@@ -115,10 +118,9 @@ services:
   outbox-worker:
     build:
       context: ../../services/backend-api
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.worker
     container_name: school_outbox_worker
     restart: unless-stopped
-    command: ["bun", "run", "src/modules/attendance/worker.ts"]
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgres://school_user:school_secret_pass@postgres-primary:5432/school_transport

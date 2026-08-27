@@ -1,6 +1,6 @@
 FROM node:20-alpine AS base
 WORKDIR /app
-RUN npm install -g pnpm bun
+RUN apk add --no-cache curl
 
 FROM base AS builder
 WORKDIR /app

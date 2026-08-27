@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# 🚌 School Transport Platform — Docker-Only Quick Demo Launcher (Order #22)
+# 🚌 School Transport Platform — Docker-Only Quick Demo Launcher (Order #22 & #23)
 # ==============================================================================
 # Windows / Git Bash / Linux / macOS compatible
 # Requirement: Docker Desktop ONLY (Zero Host Node/Bun dependencies required)
@@ -88,8 +88,8 @@ EOF
   echo "   ✅ فایل .env لوکال به صورت خودکار آماده شد."
 fi
 
-echo "3. Starting infrastructure & application containers..."
-$DOCKER_COMPOSE -f "$COMPOSE_FILE" up -d
+echo "3. Building and starting infrastructure & application containers..."
+$DOCKER_COMPOSE -f "$COMPOSE_FILE" up --build -d
 
 echo "4. Waiting for Backend API & Database to become healthy..."
 MAX_RETRIES=30
@@ -107,7 +107,7 @@ fi
 
 echo "5. Seeding Demo Data inside container..."
 # Run seeding inside the backend container without needing local node/bun
-$DOCKER_COMPOSE -f "$COMPOSE_FILE" exec -T backend-api bun run ../../scripts/seed-demo.ts >/dev/null 2>&1 || true
+$DOCKER_COMPOSE -f "$COMPOSE_FILE" exec -T backend-api bun run scripts/seed-demo.ts >/dev/null 2>&1 || true
 
 echo ""
 echo "======================================================================"

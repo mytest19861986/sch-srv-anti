@@ -1,17 +1,15 @@
 FROM node:20-alpine AS base
 WORKDIR /app
-RUN npm install -g pnpm bun
+RUN apk add --no-cache curl
 
 FROM base AS builder
 WORKDIR /app
 
-# Copy root workspace configs if any or packages
 COPY packages ./packages
 COPY apps/school-web ./apps/school-web
 
 WORKDIR /app/apps/school-web
 RUN npm install --legacy-peer-deps || true
-# Next.js build
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build || true
 
