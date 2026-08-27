@@ -1,11 +1,11 @@
 FROM oven/bun:1-alpine AS base
 WORKDIR /app
 
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl procps
 
-COPY package.json bun.lock* ./
+COPY package.json bun.lock* tsconfig.json ./
 RUN bun install --frozen-lockfile || bun install
 
 COPY . .
 
-CMD ["bun", "run", "src/modules/attendance/worker.ts"]
+CMD ["bun", "run", "src/worker.ts"]
