@@ -1,0 +1,198 @@
+version: '3.8'
+
+networks:
+  backend-net:
+    driver: bridge
+  data-net:
+    driver: bridge
+
+volumes:
+  pg_prod_primary_data:
+  pg_prod_replica_data:
+  redis_prod_data:
+  uploads_prod_data:
+  letsencrypt_certs:
+
+services:
+  # 1. Reverse Proxy & Rate Limiter with SSL
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: serviceyar_nginx_prod
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - letsencrypt_certs:/etc/letsencrypt:ro
+      - uploads_prod_data:/var/www/uploads:ro
+    networks:
+      - backend-net
+    depends_on:
+      backend-api:
+        condition: service_healthy
+      school-web:
+        condition: service_healthy
+      super-admin-web:
+        condition: service_healthy
+
+  # 2. Production Backend API
+  backend-api:
+    build:
+      context: ../../services/backend-api
+      dockerfile: Dockerfile
+    container_name: serviceyar_backend_api_prod
+    restart: always
+    environment:
+      - PORT=3000
+      - HOST=0.0.0.0
+      - NODE_ENV=production
+      - DATABASE_URL=postgres://${DB_USER:-school_user}:${DB_PASSWORD}@postgres-primary:5432/${DB_NAME:-school_transport}
+      - DATABASE_REPLICA_URL=postgres://${DB_USER:-school_user}:${DB_PASSWORD}@postgres-replica:5432/${DB_NAME:-school_transport}
+      - USE_READ_REPLICA=true
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - CACHE_ADAPTER=redis
+      - NOTIFICATION_ADAPTER=fcm
+      - FIREBASE_SERVICE_ACCOUNT_KEY=${FIREBASE_SERVICE_ACCOUNT_KEY}
+      - S3_BUCKET=${S3_BUCKET}
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY}
+      - S3_SECRET_KEY=${S3_SECRET_KEY}
+      - S3_REGION=${S3_REGION:-us-east-1}
+      - S3_ENDPOINT=${S3_ENDPOINT}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - backend-net
+      - data-net
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:3000/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # 3. School Web Dashboard (Next.js)
+  school-web:
+    build:
+      context: ../../
+      dockerfile: apps/school-web/Dockerfile
+    container_name: serviceyar_school_web_prod
+    restart: always
+    environment:
+      - PORT=3001
+      - HOST=0.0.0.0
+      - INTERNAL_BACKEND_URL=http://backend-api:3000
+      - NEXT_PUBLIC_API_URL=https://${DOMAIN:-serviceyar.ir}/api
+    networks:
+      - backend-net
+    depends_on:
+      backend-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:3001/login || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # 4. Super Admin Web Dashboard (Next.js)
+  super-admin-web:
+    build:
+      context: ../../
+      dockerfile: apps/super-admin-web/Dockerfile
+    container_name: serviceyar_super_admin_prod
+    restart: always
+    environment:
+      - PORT=3002
+      - HOST=0.0.0.0
+      - INTERNAL_BACKEND_URL=http://backend-api:3000
+      - NEXT_PUBLIC_API_URL=https://${DOMAIN:-serviceyar.ir}/api
+    networks:
+      - backend-net
+    depends_on:
+      backend-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:3002/login || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # 5. Outbox Notification & Event Worker
+  outbox-worker:
+    build:
+      context: ../../services/backend-api
+      dockerfile: Dockerfile.worker
+    container_name: serviceyar_worker_prod
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgres://${DB_USER:-school_user}:${DB_PASSWORD}@postgres-primary:5432/${DB_NAME:-school_transport}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - NOTIFICATION_ADAPTER=fcm
+      - FIREBASE_SERVICE_ACCOUNT_KEY=${FIREBASE_SERVICE_ACCOUNT_KEY}
+    networks:
+      - backend-net
+      - data-net
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+
+  # 6. PostgreSQL Primary (Production)
+  postgres-primary:
+    image: postgres:16-alpine
+    container_name: serviceyar_pg_primary_prod
+    restart: always
+    environment:
+      - POSTGRES_DB=${DB_NAME:-school_transport}
+      - POSTGRES_USER=${DB_USER:-school_user}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - pg_prod_primary_data:/var/lib/postgresql/data
+    networks:
+      - data-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-school_user} -d ${DB_NAME:-school_transport}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # 7. PostgreSQL Replica (Read Replica)
+  postgres-replica:
+    image: postgres:16-alpine
+    container_name: serviceyar_pg_replica_prod
+    restart: always
+    environment:
+      - POSTGRES_DB=${DB_NAME:-school_transport}
+      - POSTGRES_USER=${DB_USER:-school_user}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - pg_prod_replica_data:/var/lib/postgresql/data
+    networks:
+      - data-net
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+
+  # 8. Redis Production
+  redis:
+    image: redis:7.2-alpine
+    container_name: serviceyar_redis_prod
+    restart: always
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - redis_prod_data:/data
+    networks:
+      - data-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s

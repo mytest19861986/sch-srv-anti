@@ -1,0 +1,41 @@
+[
+  {
+    "scenario": "Scenario 1: Morning Burst (50 Concurrent Drivers)",
+    "concurrency": 50,
+    "totalRequests": 2229,
+    "durationSeconds": 3.02,
+    "reqPerSec": 737.8,
+    "p50": 58.7,
+    "p95": 122.83,
+    "p99": 215.19,
+    "successRate": 63.21,
+    "errorRate": 36.79,
+    "rssMb": 252
+  },
+  {
+    "scenario": "Scenario 2: Rush Hour Scaling (100 Concurrent Users)",
+    "concurrency": 100,
+    "totalRequests": 3145,
+    "durationSeconds": 3.07,
+    "reqPerSec": 1025.4,
+    "p50": 86.88,
+    "p95": 190.94,
+    "p99": 250.73,
+    "successRate": 58.19,
+    "errorRate": 41.81,
+    "rssMb": 270.2
+  },
+  {
+    "scenario": "Scenario 3: Peak Pilot Saturation (200 Concurrent Users)",
+    "concurrency": 200,
+    "totalRequests": 2656,
+    "durationSeconds": 3.22,
+    "reqPerSec": 825.7,
+    "p50": 237.98,
+    "p95": 365.95,
+    "p99": 416.86,
+    "successRate": 59.19,
+    "errorRate": 40.81,
+    "rssMb": 270.6
+  }
+]
