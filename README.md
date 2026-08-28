@@ -1,21 +1,21 @@
 # سرویس یار — سامانه جامع هوشمند مدیریت ناوگان سرویس مدارس
 
-[![Build & Test Status](https://img.shields.io/badge/tests-113%20passed-success)](https://github.com/mytest19861986/sch-srv-anti)
-[![Release Version](https://img.shields.io/badge/release-v1.1.0-blue)](https://github.com/mytest19861986/sch-srv-anti/releases/tag/v1.1.0)
+[![Build & Test Status](https://img.shields.io/badge/tests-115%20passed-success)](https://github.com/mytest19861986/sch-srv-anti)
+[![Release Version](https://img.shields.io/badge/release-v1.2.0-blue)](https://github.com/mytest19861986/sch-srv-anti/releases/tag/v1.2.0)
 [![Architecture](https://img.shields.io/badge/architecture-Zero--Trust%20Multi--Tenant-purple)](docs/ARCHITECTURE.md)
 
 **سرویس یار** یک پلتفرم جامع، چندمستاجری (Multi-Tenant) و بلادرنگ برای مدیریت یکپارچه رفت‌وآمد دانش‌آموزان، مانیتورینگ زنده ناوگان، اطلاع‌رسانی پیامکی و نوتیفیکیشن به والدین و کنترل مالی/حسابداری سرویس مدارس است.
 
 ---
 
-## 📦 دانلود مستقیم نسخه‌های رسمی (Official Downloads v1.1.0)
+## 📦 دانلود مستقیم نسخه‌های رسمی (Official Downloads v1.2.0)
 
-| محصول | فرمت | نسخه | لینک دانلود مستقیم |
-|---|---|---|---|
-| 🚐 **اپلیکیشن راننده** | APK | `v1.1.0` | [دانلود مستقیم ir.serviceyar.driver-v1.1.0.apk](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/docs/releases/ir.serviceyar.driver-v1.1.0.apk) |
-| 👨‍👩‍👧 **اپلیکیشن والدین** | APK | `v1.1.0` | [دانلود مستقیم ir.serviceyar.parent-v1.1.0.apk](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/docs/releases/ir.serviceyar.parent-v1.1.0.apk) |
-| 📋 **یادداشت‌های انتشار** | Markdown | `v1.1.0` | [مشاهده Release Notes](docs/releases/v1.1.0-release-notes.md) |
-| 🏷️ **صفحه رسمی Release** | GitHub | `v1.1.0` | [مشاهده Release v1.1.0 در گیت‌هاب](https://github.com/mytest19861986/sch-srv-anti/releases/tag/v1.1.0) |
+| محصول | فرمت | نسخه | حجم فایل | لینک دانلود مستقیم |
+|---|---|---|---|---|
+| 🚐 **اپلیکیشن راننده** | APK | `v1.2.0` | ۲۴.۰۱ MB | [دانلود مستقیم ir.serviceyar.driver-v1.2.0.apk](https://github.com/mytest19861986/sch-srv-anti/releases/download/v1.2.0/ir.serviceyar.driver-v1.2.0.apk) |
+| 👨‍👩‍👧 **اپلیکیشن والدین** | APK | `v1.2.0` | ۲۲.۰۱ MB | [دانلود مستقیم ir.serviceyar.parent-v1.2.0.apk](https://github.com/mytest19861986/sch-srv-anti/releases/download/v1.2.0/ir.serviceyar.parent-v1.2.0.apk) |
+| 📋 **یادداشت‌های انتشار** | Markdown | `v1.2.0` | — | [مشاهده Release Notes](docs/releases/v1.2.0-release-notes.md) |
+| 🏷️ **صفحه رسمی Release** | GitHub | `v1.2.0` | — | [مشاهده Release v1.2.0 در گیت‌هاب](https://github.com/mytest19861986/sch-srv-anti/releases/tag/v1.2.0) |
 
 ---
 
