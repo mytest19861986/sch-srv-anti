@@ -277,12 +277,12 @@ fastify.get('/', async (req, reply) => {
               <th class="p-3.5 text-center">ناوگان</th>
               <th class="p-3.5 text-center">دانش‌آموزان</th>
               <th class="p-3.5 text-center">وضعیت</th>
-              <th class="p-3.5 text-center">ستون اقدامات ۵‌گانه مدیر ارشد (Super Admin Actions)</th>
+              <th class="p-3.5 text-center min-w-[280px]">ستون اقدامات مدیر ارشد (Super Admin Actions)</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-800/80 text-slate-300" id="tenants-tbody">
             ${nonDeleted.map(t => `
-            <tr class="hover:bg-slate-800/50 transition-colors" id="row-${t.id}">
+            <tr class="hover:bg-slate-800/50 transition-colors h-[84px]" id="row-${t.id}">
               <td class="p-3.5 font-bold text-white flex items-center gap-2">
                 <span class="w-7 h-7 rounded-lg ${t.status === 'ACTIVE' ? 'bg-blue-500/20 text-blue-300' : 'bg-amber-500/20 text-amber-300'} flex items-center justify-center text-xs">🏢</span>
                 ${t.name}
@@ -296,27 +296,28 @@ fastify.get('/', async (req, reply) => {
                   ? '<span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">فعال و آنلاین</span>' 
                   : '<span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30" title="' + (t.statusReason || '') + '">معلق</span>'}
               </td>
-              <td class="p-3.5 text-center">
-                <div class="flex items-center justify-center gap-1.5 flex-wrap">
-                  <!-- 1. Full Manage -->
-                  <a href="/tenants/${t.id}/manage" class="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1" title="مدیریت جامع داده‌ها و ویرایش">
-                    <span>✏️</span> مدیریت کامل
-                  </a>
-                  <!-- 2. View Only -->
-                  <a href="/tenants/${t.id}/view" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all flex items-center gap-1" title="مشاهده فقط‌خواندنی">
-                    <span>👁️</span> مشاهده
-                  </a>
-                  <!-- 3. Impersonate -->
-                  <a href="http://localhost:3001?impersonate=${t.id}" target="_blank" class="px-2.5 py-1.5 rounded-lg bg-purple-600/80 hover:bg-purple-600 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1" title="ورود به پنل مدرسه با دسترسی مدیر کل">
-                    <span>🚪</span> ورود به پنل
-                  </a>
-                  <!-- 4. Suspend/Activate -->
-                  ${t.status === 'ACTIVE'
-                    ? `<button onclick="toggleTenantStatus('${t.id}', 'SUSPENDED')" class="px-2 py-1.5 rounded-lg bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 border border-amber-500/40 font-semibold text-xs transition-all" title="تعلیق تننت">⏸️ تعلیق</button>`
-                    : `<button onclick="toggleTenantStatus('${t.id}', 'ACTIVE')" class="px-2 py-1.5 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 font-semibold text-xs transition-all" title="فعال‌سازی مجدد">▶️ فعال‌سازی</button>`
-                  }
-                  <!-- 5. Soft Delete -->
-                  <button onclick="softDeleteTenant('${t.id}', '${t.name}')" class="px-2 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 font-semibold text-xs transition-all" title="حذف نرم تننت">🗑️ حذف</button>
+              <td class="p-3.5 text-center min-w-[280px]">
+                <div class="flex flex-col gap-1.5 items-center justify-center">
+                  <!-- Tier 1: Primary Management & View -->
+                  <div class="flex items-center gap-2 w-full justify-center">
+                    <a href="/tenants/${t.id}/manage" class="flex-1 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5" title="مدیریت جامع داده‌ها و ویرایش اطلاعات تننت">
+                      <span>✏️</span> مدیریت کامل
+                    </a>
+                    <a href="/tenants/${t.id}/view" class="px-3 py-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700/80 transition-all flex items-center justify-center gap-1" title="مشاهده فقط‌خواندنی تننت">
+                      <span>👁️</span> مشاهده
+                    </a>
+                  </div>
+                  <!-- Tier 2: Operational Actions (Icon-Only + Tooltips) -->
+                  <div class="flex items-center gap-2 w-full justify-center">
+                    <a href="http://localhost:3001?impersonate=${t.id}" target="_blank" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-purple-300 border border-slate-700/80 flex items-center justify-center text-sm transition-all" title="ورود به پنل مدرسه (Impersonation)">
+                      🚪
+                    </a>
+                    ${t.status === 'ACTIVE'
+                      ? `<button onclick="toggleTenantStatus('${t.id}', 'SUSPENDED')" class="w-8 h-8 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center text-sm transition-all" title="تعلیق مدرسه">⏸️</button>`
+                      : `<button onclick="toggleTenantStatus('${t.id}', 'ACTIVE')" class="w-8 h-8 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center justify-center text-sm transition-all" title="فعال‌سازی مجدد مدرسه">▶️</button>`
+                    }
+                    <button onclick="softDeleteTenant('${t.id}', '${t.name}')" class="w-8 h-8 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center justify-center text-sm transition-all" title="حذف نرم مدرسه">🗑️</button>
+                  </div>
                 </div>
               </td>
             </tr>
