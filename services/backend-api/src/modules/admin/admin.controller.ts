@@ -17,6 +17,126 @@ export function adminController(
   const activeParentsMap = new Map<string, any>();
   const activeDriversMap = new Map<string, any>();
 
+  function seedDefaultData() {
+    const tenants = ['tenant-school-mehr', 'school-tehran-1', 'school_a', 'school-statemachine-tenant'];
+    for (const tId of tenants) {
+      if (!Array.from(activeParentsMap.values()).some(p => p.tenantId === tId)) {
+        // Parent 1
+        const p1 = {
+          id: `par-${tId}-1`,
+          tenantId: tId,
+          userId: `usr-p1-${tId}`,
+          fullName: 'فاطمه محمدی',
+          phone: '09123456789',
+          email: `fatemeh.mohammadi@${tId}.serviceyar.ir`,
+          relationship: 'مادر',
+          studentIds: [`std-${tId}-1`, `std-${tId}-2`],
+          childrenCount: 2,
+          status: 'ACTIVE',
+          isDeleted: false,
+          createdAt: new Date()
+        };
+        // Parent 2
+        const p2 = {
+          id: `par-${tId}-2`,
+          tenantId: tId,
+          userId: `usr-p2-${tId}`,
+          fullName: 'رضا حسینی',
+          phone: '09129876543',
+          email: `reza.hosseini@${tId}.serviceyar.ir`,
+          relationship: 'پدر',
+          studentIds: [`std-${tId}-3`],
+          childrenCount: 1,
+          status: 'ACTIVE',
+          isDeleted: false,
+          createdAt: new Date()
+        };
+        // Parent 3
+        const p3 = {
+          id: `par-${tId}-3`,
+          tenantId: tId,
+          userId: `usr-p3-${tId}`,
+          fullName: 'زهرا کاظمی',
+          phone: '09351112233',
+          email: `zahra.kazemi@${tId}.serviceyar.ir`,
+          relationship: 'مادر',
+          studentIds: [`std-${tId}-3`, `std-${tId}-4`],
+          childrenCount: 2,
+          status: 'ACTIVE',
+          isDeleted: false,
+          createdAt: new Date()
+        };
+        activeParentsMap.set(p1.id, p1);
+        activeParentsMap.set(p2.id, p2);
+        activeParentsMap.set(p3.id, p3);
+
+        // Student 1
+        const s1 = {
+          id: `std-${tId}-1`,
+          tenantId: tId,
+          firstName: 'امیرعلی',
+          lastName: 'محمدی',
+          fullName: 'امیرعلی محمدی',
+          grade: 'پایه سوم',
+          nationalCode: '0012345678',
+          parentIds: [`par-${tId}-1`],
+          status: 'ACTIVE',
+          isDeleted: false,
+          createdAt: new Date()
+        };
+        // Student 2 (Sister of Student 1)
+        const s2 = {
+          id: `std-${tId}-2`,
+          tenantId: tId,
+          firstName: 'سارا',
+          lastName: 'محمدی',
+          fullName: 'سارا محمدی',
+          grade: 'پایه اول',
+          nationalCode: '0012345679',
+          parentIds: [`par-${tId}-1`],
+          status: 'ACTIVE',
+          isDeleted: false,
+          createdAt: new Date()
+        };
+        // Student 3 (Has 2 parents: Reza & Zahra)
+        const s3 = {
+          id: `std-${tId}-3`,
+          tenantId: tId,
+          firstName: 'پارسـا',
+          lastName: 'حسینی',
+          fullName: 'پارسا حسینی',
+          grade: 'پایه پنجم',
+          nationalCode: '0023456789',
+          parentIds: [`par-${tId}-2`, `par-${tId}-3`],
+          status: 'ACTIVE',
+          isDeleted: false,
+          createdAt: new Date()
+        };
+        // Student 4
+        const s4 = {
+          id: `std-${tId}-4`,
+          tenantId: tId,
+          firstName: 'نیما',
+          lastName: 'کاظمی',
+          fullName: 'نیما کاظمی',
+          grade: 'پایه ششم',
+          nationalCode: '0034567890',
+          parentIds: [`par-${tId}-3`],
+          status: 'ACTIVE',
+          isDeleted: false,
+          createdAt: new Date()
+        };
+
+        activeStudentsMap.set(s1.id, s1);
+        activeStudentsMap.set(s2.id, s2);
+        activeStudentsMap.set(s3.id, s3);
+        activeStudentsMap.set(s4.id, s4);
+      }
+    }
+  }
+
+  seedDefaultData();
+
   function getEffectiveTenantId(request: FastifyRequest, reply?: FastifyReply): string {
     const user = (request as any).user;
     const requestedTenant = (request.query as any)?.tenantId || (request.headers as any)['x-tenant-id'] || (request.body as any)?.tenantId;
@@ -65,8 +185,29 @@ export function adminController(
       
       const studentsInTenant = Array.from(activeStudentsMap.values()).filter(s => s.tenantId === tenantId && !s.isDeleted);
       const filtered = studentsInTenant.filter(s => !q || s.fullName?.includes(q) || s.firstName?.includes(q) || s.lastName?.includes(q) || s.nationalCode?.includes(q));
+
+      // Enrich with linked parents
+      const enrichedStudents = filtered.map(s => {
+        const linkedParents: any[] = [];
+        for (const p of activeParentsMap.values()) {
+          if (p.tenantId === tenantId && !p.isDeleted) {
+            if (s.parentIds?.includes(p.id) || p.studentIds?.includes(s.id)) {
+              linkedParents.push({
+                id: p.id,
+                full_name: p.fullName,
+                phone: p.phone,
+                relationship: p.relationship || 'سرپرست'
+              });
+            }
+          }
+        }
+        return {
+          ...s,
+          parents: linkedParents
+        };
+      });
       
-      return reply.send({ items: filtered, total: filtered.length, page: 1, limit: 20 });
+      return reply.send({ items: enrichedStudents, total: enrichedStudents.length, page: 1, limit: 20 });
     });
 
     fastify.post('/students', async (request: FastifyRequest<{ Body: { first_name: string; last_name: string; grade: string; national_code?: string; parent_ids?: string[]; tenantId?: string } }>, reply) => {
@@ -98,6 +239,18 @@ export function adminController(
       };
 
       activeStudentsMap.set(studentId, studentRecord);
+
+      // Bidirectional link: update parents studentIds
+      for (const pId of parent_ids) {
+        const parent = activeParentsMap.get(pId);
+        if (parent) {
+          if (!parent.studentIds) parent.studentIds = [];
+          if (!parent.studentIds.includes(studentId)) {
+            parent.studentIds.push(studentId);
+            parent.childrenCount = parent.studentIds.length;
+          }
+        }
+      }
 
       await domainRepository.createStudent({
         id: studentId,
@@ -142,6 +295,20 @@ export function adminController(
         updated.firstName = request.body.first_name || existing.firstName;
         updated.lastName = request.body.last_name || existing.lastName;
         updated.fullName = `${updated.firstName} ${updated.lastName}`;
+      }
+      if (request.body.parent_ids) {
+        updated.parentIds = request.body.parent_ids;
+        // Sync parent linkages
+        for (const pId of request.body.parent_ids) {
+          const parent = activeParentsMap.get(pId);
+          if (parent) {
+            if (!parent.studentIds) parent.studentIds = [];
+            if (!parent.studentIds.includes(id)) {
+              parent.studentIds.push(id);
+              parent.childrenCount = parent.studentIds.length;
+            }
+          }
+        }
       }
       activeStudentsMap.set(id, updated);
 
@@ -202,17 +369,41 @@ export function adminController(
       const parentsInTenant = Array.from(activeParentsMap.values()).filter(p => p.tenantId === tenantId && !p.isDeleted);
       const filtered = parentsInTenant.filter(p => !q || p.fullName?.includes(q) || p.phone?.includes(q) || p.email?.includes(q));
 
-      return reply.send({ items: filtered, total: filtered.length, page: 1, limit: 20 });
+      // Enrich with linked students
+      const enrichedParents = filtered.map(p => {
+        const linkedStudents: any[] = [];
+        for (const s of activeStudentsMap.values()) {
+          if (s.tenantId === tenantId && !s.isDeleted) {
+            if (p.studentIds?.includes(s.id) || s.parentIds?.includes(p.id)) {
+              linkedStudents.push({
+                id: s.id,
+                first_name: s.firstName,
+                last_name: s.lastName,
+                fullName: s.fullName,
+                grade: s.grade,
+                status: s.status
+              });
+            }
+          }
+        }
+        return {
+          ...p,
+          students: linkedStudents,
+          childrenCount: linkedStudents.length
+        };
+      });
+
+      return reply.send({ items: enrichedParents, total: enrichedParents.length, page: 1, limit: 20 });
     });
 
-    fastify.post('/parents', async (request: FastifyRequest<{ Body: { full_name: string; phone: string; email?: string; temp_password?: string; student_ids?: string[]; tenantId?: string } }>, reply) => {
+    fastify.post('/parents', async (request: FastifyRequest<{ Body: { full_name: string; phone: string; email?: string; relationship?: string; temp_password?: string; student_ids?: string[]; tenantId?: string } }>, reply) => {
       let tenantId: string;
       try {
         tenantId = getEffectiveTenantId(request, reply);
       } catch {
         return;
       }
-      const { full_name, phone, email, temp_password, student_ids = [] } = request.body || {};
+      const { full_name, phone, email, relationship, temp_password, student_ids = [] } = request.body || {};
 
       if (!full_name || !phone) {
         return reply.status(400).send({ error: 'BAD_REQUEST', message: 'full_name and phone are required' });
@@ -245,6 +436,7 @@ export function adminController(
         fullName: full_name,
         phone,
         email: userEmail,
+        relationship: relationship || 'سرپرست',
         temp_password: generatedPassword,
         studentIds: student_ids,
         childrenCount: student_ids.length,
@@ -254,6 +446,17 @@ export function adminController(
       };
 
       activeParentsMap.set(parentId, parentRecord);
+
+      // Bidirectional link: update students parentIds
+      for (const sId of student_ids) {
+        const student = activeStudentsMap.get(sId);
+        if (student) {
+          if (!student.parentIds) student.parentIds = [];
+          if (!student.parentIds.includes(parentId)) {
+            student.parentIds.push(parentId);
+          }
+        }
+      }
 
       await domainRepository.createParent({
         id: parentId,
@@ -293,6 +496,19 @@ export function adminController(
       }
 
       const updated = { ...existing, ...request.body };
+      if (request.body.student_ids) {
+        updated.studentIds = request.body.student_ids;
+        updated.childrenCount = request.body.student_ids.length;
+        for (const sId of request.body.student_ids) {
+          const student = activeStudentsMap.get(sId);
+          if (student) {
+            if (!student.parentIds) student.parentIds = [];
+            if (!student.parentIds.includes(id)) {
+              student.parentIds.push(id);
+            }
+          }
+        }
+      }
       activeParentsMap.set(id, updated);
 
       await auditService.log({
@@ -729,6 +945,30 @@ export function adminController(
         { id: 'evt-2', tenantId, studentName: 'سارا محمدی', eventType: 'DROPPED_OFF', time: '07:45', route: 'مسیر ۱', driver: 'علی رضایی' }
       ];
       return reply.send({ items, hourlyDistribution: { '07:00': 42, '13:00': 35 }, totalEvents: 140 });
+    });
+
+    fastify.get('/audit-logs', async (request: FastifyRequest<{ Querystring: { tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
+      const logs = await auditService.getLogs({ tenantId, page: 1, limit: 50 });
+      return reply.send(logs);
+    });
+
+    fastify.get('/notification-logs', async (request: FastifyRequest<{ Querystring: { tenantId?: string } }>, reply) => {
+      let tenantId: string;
+      try {
+        tenantId = getEffectiveTenantId(request, reply);
+      } catch {
+        return;
+      }
+      const items = [
+        { id: 'notif-1', tenantId, title: 'وضعیت سرویس', message: 'دانش‌آموز سوار سرویس شد', recipientPhone: '09123456789', status: 'DELIVERED', sentAt: new Date() }
+      ];
+      return reply.send({ items, total: items.length });
     });
 
     // 7. Bulk Export CSV Endpoint (Bot #45)
