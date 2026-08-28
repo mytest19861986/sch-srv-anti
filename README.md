@@ -1,6 +1,6 @@
 # سرویس یار — سامانه جامع هوشمند مدیریت ناوگان سرویس مدارس
 
-[![Build & Test Status](https://img.shields.io/badge/tests-115%20passed-success)](https://github.com/mytest19861986/sch-srv-anti)
+[![Build & Test Status](https://img.shields.io/badge/tests-116%20passed-success)](https://github.com/mytest19861986/sch-srv-anti)
 [![Release Version](https://img.shields.io/badge/release-v1.2.0-blue)](https://github.com/mytest19861986/sch-srv-anti/releases/tag/v1.2.0)
 [![Architecture](https://img.shields.io/badge/architecture-Zero--Trust%20Multi--Tenant-purple)](docs/ARCHITECTURE.md)
 

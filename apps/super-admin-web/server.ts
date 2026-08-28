@@ -1,6 +1,10 @@
 /**
  * Super Admin Web Platform Portal Server (Comprehensive Management & Live KPIs)
- * Order #60 & #62 Implementation: Dynamic KPIs, 2-Tier Action Column, 8-Tab Full Management (/tenants/:id/manage).
+ * Order #60, #62 & #63 Implementation:
+ * - 8 Fully Functional Tabs with Persian Badges (toPersianDigits)
+ * - EmptyState Component for Zero-Data Scenarios
+ * - Full CRUD & Audit Log with actor_role=SUPER_ADMIN
+ * - Balanced 2-Tier Actions Column on Overview
  * Port: 3002 (0.0.0.0)
  */
 
@@ -11,7 +15,11 @@ const fastify = Fastify({ logger: false });
 const PORT = 3002;
 const HOST = '0.0.0.0';
 
-// Live Dynamic Tenant & Platform Store
+function toFaDigits(num: number | string): string {
+  const fa = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+  return String(num).replace(/[0-9]/g, w => fa[+w]);
+}
+
 interface TenantRecord {
   id: string;
   name: string;
@@ -33,6 +41,53 @@ interface TenantRecord {
 }
 
 let TENANTS: TenantRecord[] = [
+  {
+    id: 'school-tehran-alborz',
+    name: 'دبیرستان ماندگار البرز تهران',
+    city: 'تهران',
+    region: 'منطقه ۶ — خیابان انقلاب',
+    vehiclesCount: 6,
+    studentsCount: 55,
+    status: 'ACTIVE',
+    createdAt: '2026-08-10',
+    students: [
+      { id: 'std-201', name: 'آرمین کاظمی', nationalCode: '۰۱۱۲۲۳۳۴۴۵', grade: 'پایه دهم', route: 'مسیر الف — کارگر شمالی', status: 'حاضر در دبیرستان' },
+      { id: 'std-202', name: 'بردیا شایان', nationalCode: '۰۲۲۳۳۴۴۵۵۶', grade: 'پایه یازدهم', route: 'مسیر ب — گیشا', status: 'حاضر در دبیرستان' },
+      { id: 'std-203', name: 'سامان فراهانی', nationalCode: '۰۳۳۴۴۵۵۶۶۷', grade: 'پایه دوازدهم', route: 'مسیر ج — فاطمی', status: 'سوار بر سرویس' },
+      { id: 'std-204', name: 'دانیال کریمی', nationalCode: '۰۴۴۵۵۶۶۷۷۸', grade: 'پایه دهم', route: 'مسیر الف — کارگر شمالی', status: 'پیاده شد در مقصد' }
+    ],
+    parents: [
+      { id: 'par-201', name: 'کامران کاظمی (پدر)', phone: '۰۹۱۲۸۸۸۱۱۱۱', nationalCode: '۰۱۱۹۹۲۲۳۳۴', children: 'آرمین کاظمی (پایه دهم)', address: 'تهران، امیرآباد شمالی، خ شانزدهم' },
+      { id: 'par-202', name: 'فرشته شایان (مادر)', phone: '۰۹۱۲۸۸۸۲۲۲۲', nationalCode: '۰۲۲۸۸۳۳۴۴۵', children: 'بردیا شایان (پایه یازدهم)', address: 'تهران، کوی نصر (گیشا)، خ ۲۱' },
+      { id: 'par-203', name: 'بهزاد فراهانی (پدر)', phone: '۰۹۱۲۸۸۸۳۳۳۳', nationalCode: '۰۳۳۷۷۴۴۵۵۶', children: 'سامان فراهانی (پایه دوازدهم)', address: 'تهران، میدان فاطمی، خ بیستون' },
+      { id: 'par-204', name: 'سارا کریمی (مادر)', phone: '۰۹۱۲۸۸۸۴۴۴۴', nationalCode: '۰۴۴۶۶۵۵۶۶۷', children: 'دانیال کریمی (پایه دهم)', address: 'تهران، بلوار کشاورز، خ وصال' }
+    ],
+    drivers: [
+      { id: 'drv-201', name: 'مرتضی نوری', phone: '۰۹۱۲۵۵۵۶۶۷۷', vehicle: 'مینی‌بوس هیوندای', plate: '۳۳ع۴۵۶-۱۱', route: 'مسیر الف — کارگر و امیرآباد' },
+      { id: 'drv-202', name: 'قاسم صادقی', phone: '۰۹۱۲۶۶۶۷۷۸۸', vehicle: 'ون غزال', plate: '۲۲ب۹۹۱-۴۴', route: 'مسیر ب — گیشا' },
+      { id: 'drv-203', name: 'جواد رضوی', phone: '۰۹۱۲۷۷۷۸۸۹۹', vehicle: 'میدل‌باس مان', plate: '۵۵س۱۱۴-۳۳', route: 'مسیر ج — فاطمی' }
+    ],
+    vehicles: [
+      { id: 'veh-201', model: 'مینی‌بوس هیوندای (کرم)', plate: '۳۳ع۴۵۶-۱۱', capacity: 16, driverName: 'مرتضی نوری', insuranceValid: '۱۴۰۵/۱۰/۱۵' },
+      { id: 'veh-202', model: 'ون غزال (سفید)', plate: '۲۲ب۹۹۱-۴۴', capacity: 12, driverName: 'قاسم صادقی', insuranceValid: '۱۴۰۵/۱۱/۳۰' },
+      { id: 'veh-203', model: 'میدل‌باس مان (خاکستری)', plate: '۵۵س۱۱۴-۳۳', capacity: 21, driverName: 'جواد رضوی', insuranceValid: '۱۴۰۶/۰۲/۲۰' }
+    ],
+    routes: [
+      { id: 'rt-201', name: 'مسیر الف — کارگر و امیرآباد', stopsCount: 8, shift: 'صبح و عصر', status: 'فعال' },
+      { id: 'rt-202', name: 'مسیر ب — گیشا و جلال آل‌احمد', stopsCount: 6, shift: 'صبح و عصر', status: 'فعال' },
+      { id: 'rt-203', name: 'مسیر ج — فاطمی و فلسطین', stopsCount: 7, shift: 'صبح و عصر', status: 'فعال' }
+    ],
+    services: [], // Intentionally empty to showcase EmptyState component for Order #63
+    events: [
+      { id: 'ev-201', studentName: 'آرمین کاظمی', type: 'DROPPED_OFF', stopName: 'درب اصلی دبیرستان البرز', time: '۰۷:۲۰:۰۰' },
+      { id: 'ev-202', studentName: 'بردیا شایان', type: 'DROPPED_OFF', stopName: 'درب اصلی دبیرستان البرز', time: '۰۷:۲۴:۳۰' },
+      { id: 'ev-203', studentName: 'سامان فراهانی', type: 'PICKED_UP', stopName: 'ایستگاه فاطمی ۲', time: '۰۶:۵۵:۱۲' }
+    ],
+    auditLogs: [
+      { id: 'aud-3', timestamp: '2026-08-20 10:00', actor: 'SUPER_ADMIN (admin@platform.ir)', action: 'TENANT_CREATED', details: 'ثبت قرارداد تننت دبیرستان البرز' },
+      { id: 'aud-4', timestamp: '2026-08-28 14:00', actor: 'SUPER_ADMIN (admin@platform.ir)', action: 'FLEET_EXPANDED', details: 'تخصیص ناوگان جدید به دبیرستان البرز' }
+    ]
+  },
   {
     id: 'tenant-school-mehr',
     name: 'مدرسه مهر دانش تهران (پایلوت فعال)',
@@ -73,53 +128,14 @@ let TENANTS: TenantRecord[] = [
     ],
     services: [
       { id: 'srv-101', name: 'سرویس ونک (شیفت صبح)', driverName: 'علی رضایی', vehiclePlate: '۱۱ب۲۳۴-۲۲', departureTime: '۰۶:۵۰', status: 'رسیده به مدرسه' },
-      { id: 'srv-102', name: 'سرویس سعادت‌آباد (شیفت صبح)', driverName: 'حسین احمدی', vehiclePlate: '۴۴ج۸۹۱-۳۳', departureTime: '۰۷:۰۵', status: 'در مسیر مدرسه' },
-      { id: 'srv-103', name: 'سرویس نیاوران (شیفت صبح)', driverName: 'محمد حسینی', vehiclePlate: '۵۵د۱۲۳-۱۱', departureTime: '۰۶:۴۵', status: 'رسیده به مدرسه' }
+      { id: 'srv-102', name: 'سرویس سعادت‌آباد (شیفت صبح)', driverName: 'حسین احمدی', vehiclePlate: '۴۴ج۸۹۱-۳۳', departureTime: '۰۷:۰۵', status: 'در مسیر مدرسه' }
     ],
     events: [
       { id: 'ev-101', studentName: 'امیرعلی محمدی', type: 'DROPPED_OFF', stopName: 'درب اصلی مدرسه', time: '۰۷:۲۸:۱۴' },
-      { id: 'ev-102', studentName: 'یاسمین رضایی', type: 'PICKED_UP', stopName: 'ایستگاه ونک ۲', time: '۰۷:۱۲:۰۵' },
-      { id: 'ev-103', studentName: 'پارسا تهرانی', type: 'DROPPED_OFF', stopName: 'درب اصلی مدرسه', time: '۰۷:۲۷:۵۰' }
+      { id: 'ev-102', studentName: 'یاسمین رضایی', type: 'PICKED_UP', stopName: 'ایستگاه ونک ۲', time: '۰۷:۱۲:۰۵' }
     ],
     auditLogs: [
-      { id: 'aud-1', timestamp: '2026-08-28 08:30', actor: 'SUPER_ADMIN (admin@platform.ir)', action: 'TENANT_PROVISION', details: 'تخصیص اولیه و فعال‌سازی تننت' },
-      { id: 'aud-2', timestamp: '2026-08-28 11:15', actor: 'SUPER_ADMIN (admin@platform.ir)', action: 'CONFIG_OVERRIDE', details: 'تنظیم پارامترهای پایلوت محلی Wi-Fi' }
-    ]
-  },
-  {
-    id: 'school-tehran-alborz',
-    name: 'دبیرستان ماندگار البرز تهران',
-    city: 'تهران',
-    region: 'منطقه ۶ — خیابان انقلاب',
-    vehiclesCount: 6,
-    studentsCount: 55,
-    status: 'ACTIVE',
-    createdAt: '2026-08-10',
-    students: [
-      { id: 'std-201', name: 'آرمین کاظمی', nationalCode: '۰۱۱۲۲۳۳۴۴۵', grade: 'پایه دهم', route: 'مسیر الف — کارگر شمالی', status: 'حاضر در مدرسه' },
-      { id: 'std-202', name: 'بردیا شایان', nationalCode: '۰۲۲۳۳۴۴۵۵۶', grade: 'پایه یازدهم', route: 'مسیر ب — گیشا', status: 'حاضر در مدرسه' }
-    ],
-    parents: [
-      { id: 'par-201', name: 'کامران کاظمی', phone: '۰۹۱۲۸۸۸۱۱۱۱', nationalCode: '۰۱۱۹۹۲۲۳۳۴', children: 'آرمین کاظمی', address: 'تهران، کارگر شمالی' },
-      { id: 'par-202', name: 'فرشته شایان', phone: '۰۹۱۲۸۸۸۲۲۲۲', nationalCode: '۰۲۲۸۸۳۳۴۴۵', children: 'بردیا شایان', address: 'تهران، کوی نصر (گیشا)' }
-    ],
-    drivers: [
-      { id: 'drv-201', name: 'مرتضی نوری', phone: '۰۹۱۲۵۵۵۶۶۷۷', vehicle: 'مینی‌بوس هیوندای', plate: '۳۳ع۴۵۶-۱۱', route: 'مسیر الف — کارگر و امیرآباد' }
-    ],
-    vehicles: [
-      { id: 'veh-201', model: 'مینی‌بوس هیوندای (کرم)', plate: '۳۳ع۴۵۶-۱۱', capacity: 16, driverName: 'مرتضی نوری', insuranceValid: '۱۴۰۵/۱۰/۱۵' }
-    ],
-    routes: [
-      { id: 'rt-201', name: 'مسیر الف — کارگر و امیرآباد', stopsCount: 8, shift: 'صبح و عصر', status: 'فعال' }
-    ],
-    services: [
-      { id: 'srv-201', name: 'سرویس کارگر (شیفت صبح)', driverName: 'مرتضی نوری', vehiclePlate: '۳۳ع۴۵۶-۱۱', departureTime: '۰۶:۴۰', status: 'پایان‌یافته' }
-    ],
-    events: [
-      { id: 'ev-201', studentName: 'آرمین کاظمی', type: 'DROPPED_OFF', stopName: 'درب دبیرستان البرز', time: '۰۷:۲۰:۰۰' }
-    ],
-    auditLogs: [
-      { id: 'aud-3', timestamp: '2026-08-20 10:00', actor: 'SUPER_ADMIN (admin@platform.ir)', action: 'TENANT_CREATED', details: 'ثبت قرارداد تننت دبیرستان البرز' }
+      { id: 'aud-1', timestamp: '2026-08-28 08:30', actor: 'SUPER_ADMIN (admin@platform.ir)', action: 'TENANT_PROVISION', details: 'تخصیص اولیه و فعال‌سازی تننت' }
     ]
   },
   {
@@ -146,9 +162,7 @@ let TENANTS: TenantRecord[] = [
     routes: [
       { id: 'rt-301', name: 'مسیر ۱ — معالی‌آباد و زرهی', stopsCount: 6, shift: 'صبح و عصر', status: 'فعال' }
     ],
-    services: [
-      { id: 'srv-301', name: 'سرویس معالی‌آباد', driverName: 'سعید مرادی', vehiclePlate: '۶۳ج۳۲۱-۸۸', departureTime: '۰۶:۵۵', status: 'رسیده به مقصد' }
-    ],
+    services: [],
     events: [
       { id: 'ev-301', studentName: 'ستاره رحیمی', type: 'DROPPED_OFF', stopName: 'درب مدرسه دانش', time: '۰۷:۲۵:۱۰' }
     ],
@@ -181,17 +195,33 @@ let TENANTS: TenantRecord[] = [
     routes: [
       { id: 'rt-401', name: 'مسیر شرق — پل خواجو', stopsCount: 4, shift: 'صبح و عصر', status: 'غیرفعال موقت' }
     ],
-    services: [
-      { id: 'srv-401', name: 'سرویس پل خواجو', driverName: 'داوود قاسمی', vehiclePlate: '۱۳س۵۵۵-۶۷', departureTime: '۰۷:۰۰', status: 'معلق' }
-    ],
-    events: [
-      { id: 'ev-401', studentName: 'مهتاب عباسی', type: 'HOLIDAY_NOTIFICATION', stopName: 'ایستگاه مشتاق', time: '۰۶:۳۰:۰۰' }
-    ],
+    services: [],
+    events: [],
     auditLogs: [
       { id: 'aud-5', timestamp: '2026-08-27 16:45', actor: 'SUPER_ADMIN (admin@platform.ir)', action: 'TENANT_SUSPEND', details: 'تعلیق موقت جهت بررسی مدارک فنی ناوگان' }
     ]
   }
 ];
+
+// Reusable EmptyState Component
+function renderEmptyState(title: string, description: string, buttonText?: string, actionFn?: string): string {
+  return `
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-12 text-center shadow-xl space-y-4 my-2">
+    <div class="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-3xl mx-auto shadow-inner">
+      📭
+    </div>
+    <div class="space-y-1">
+      <h5 class="text-base font-bold text-white">${title}</h5>
+      <p class="text-xs text-slate-400 max-w-md mx-auto">${description}</p>
+    </div>
+    ${buttonText ? `
+    <button onclick="${actionFn || 'alert(\'عملیات در دسترس است\')'}" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition-all inline-flex items-center gap-1.5 mt-2">
+      <span>+</span> ${buttonText}
+    </button>
+    ` : ''}
+  </div>
+  `;
+}
 
 // Layout Renderer
 const SUPER_ADMIN_LAYOUT = (title: string, content: string) => `<!DOCTYPE html>
@@ -285,8 +315,8 @@ fastify.get('/', async (req, reply) => {
           <p class="text-xs font-bold text-slate-400">کل مدارس پلتفرم (Tenants)</p>
           <span class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-300 flex items-center justify-center text-sm">🏢</span>
         </div>
-        <p class="text-3xl font-black text-white mt-2" id="kpi-tenants">${totalTenants} مدرسه</p>
-        <p class="text-xs text-emerald-400 font-medium mt-1">↑ ${activeTenants} فعال ${suspendedTenants > 0 ? `| ${suspendedTenants} معلق` : ''}</p>
+        <p class="text-3xl font-black text-white mt-2" id="kpi-tenants">${toFaDigits(totalTenants)} مدرسه</p>
+        <p class="text-xs text-emerald-400 font-medium mt-1">↑ ${toFaDigits(activeTenants)} فعال ${suspendedTenants > 0 ? `| ${toFaDigits(suspendedTenants)} معلق` : ''}</p>
       </div>
 
       <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg">
@@ -294,8 +324,8 @@ fastify.get('/', async (req, reply) => {
           <p class="text-xs font-bold text-slate-400">مجموع کل ناوگان کشور</p>
           <span class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-sm">🚐</span>
         </div>
-        <p class="text-3xl font-black text-white mt-2" id="kpi-vehicles">${totalVehicles} دستگاه</p>
-        <p class="text-xs text-slate-400 font-medium mt-1">جمع دقیق سطرها (${nonDeleted.map(t => t.vehiclesCount).join(' + ')} = ${totalVehicles})</p>
+        <p class="text-3xl font-black text-white mt-2" id="kpi-vehicles">${toFaDigits(totalVehicles)} دستگاه</p>
+        <p class="text-xs text-slate-400 font-medium mt-1">جمع دقیق سطرها (${nonDeleted.map(t => toFaDigits(t.vehiclesCount)).join(' + ')} = ${toFaDigits(totalVehicles)})</p>
       </div>
 
       <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg">
@@ -303,7 +333,7 @@ fastify.get('/', async (req, reply) => {
           <p class="text-xs font-bold text-slate-400">دانش‌آموزان تحت پوشش</p>
           <span class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-300 flex items-center justify-center text-sm">👨‍🎓</span>
         </div>
-        <p class="text-3xl font-black text-white mt-2" id="kpi-students">${totalStudents} نفر</p>
+        <p class="text-3xl font-black text-white mt-2" id="kpi-students">${toFaDigits(totalStudents)} نفر</p>
         <p class="text-xs text-emerald-400 font-medium mt-1">ثبت‌شده در پایگاه داده</p>
       </div>
 
@@ -320,7 +350,7 @@ fastify.get('/', async (req, reply) => {
     <!-- Tenants Table with 2-Tier Balanced Actions -->
     <div class="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
       <div class="p-4 border-b border-slate-800 flex items-center justify-between">
-        <h3 class="font-bold text-white text-sm">فهرست مدارس و مستاجران پلتفرم (Tenants Directory — ${totalTenants} سطر)</h3>
+        <h3 class="font-bold text-white text-sm">فهرست مدارس و مستاجران پلتفرم (Tenants Directory — ${toFaDigits(totalTenants)} سطر)</h3>
         <span class="text-xs text-slate-400">کنترل دسترسی جامع مدیر ارشد (Super Admin RBAC)</span>
       </div>
       <div class="overflow-x-auto">
@@ -345,8 +375,8 @@ fastify.get('/', async (req, reply) => {
               </td>
               <td class="p-3.5 font-mono text-indigo-300">${t.id}</td>
               <td class="p-3.5">${t.city} — ${t.region}</td>
-              <td class="p-3.5 text-center font-bold text-white">${t.vehiclesCount} دستگاه</td>
-              <td class="p-3.5 text-center font-bold text-white">${t.studentsCount} نفر</td>
+              <td class="p-3.5 text-center font-bold text-white">${toFaDigits(t.vehiclesCount)} دستگاه</td>
+              <td class="p-3.5 text-center font-bold text-white">${toFaDigits(t.studentsCount)} نفر</td>
               <td class="p-3.5 text-center">
                 ${t.status === 'ACTIVE' 
                   ? '<span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">فعال و آنلاین</span>' 
@@ -465,27 +495,28 @@ fastify.get('/tenants/:id/manage', async (req, reply) => {
       </div>
     </div>
 
-    <!-- 8 Tabs Bar -->
+    <!-- 8 Tabs Bar with Persian Badges -->
     <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-2 flex items-center gap-2 overflow-x-auto shadow-md">
-      <button onclick="switchTab('students')" id="tab-btn-students" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm transition-all">👨‍🎓 دانش‌آموزان (${tenant.students.length})</button>
-      <button onclick="switchTab('parents')" id="tab-btn-parents" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">👨‍👩‍👧 اولیا (${tenant.parents.length})</button>
-      <button onclick="switchTab('drivers')" id="tab-btn-drivers" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">🚐 رانندگان (${tenant.drivers.length})</button>
-      <button onclick="switchTab('vehicles')" id="tab-btn-vehicles" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">🚗 خودروها (${tenant.vehicles.length})</button>
-      <button onclick="switchTab('routes')" id="tab-btn-routes" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">🗺️ مسیرها (${tenant.routes.length})</button>
-      <button onclick="switchTab('services')" id="tab-btn-services" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">🔄 سرویس‌ها (${tenant.services.length})</button>
-      <button onclick="switchTab('events')" id="tab-btn-events" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">⚡ رویدادها (${tenant.events.length})</button>
-      <button onclick="switchTab('audit')" id="tab-btn-audit" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">📜 ممیزی (${tenant.auditLogs.length})</button>
+      <button onclick="switchTab('students')" id="tab-btn-students" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm transition-all flex items-center gap-1">👨‍🎓 دانش‌آموزان (${toFaDigits(tenant.students.length)})</button>
+      <button onclick="switchTab('parents')" id="tab-btn-parents" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all flex items-center gap-1">👨‍👩‍👧 اولیا (${toFaDigits(tenant.parents.length)})</button>
+      <button onclick="switchTab('drivers')" id="tab-btn-drivers" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all flex items-center gap-1">🚐 رانندگان (${toFaDigits(tenant.drivers.length)})</button>
+      <button onclick="switchTab('vehicles')" id="tab-btn-vehicles" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all flex items-center gap-1">🚗 خودروها (${toFaDigits(tenant.vehicles.length)})</button>
+      <button onclick="switchTab('routes')" id="tab-btn-routes" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all flex items-center gap-1">🗺️ مسیرها (${toFaDigits(tenant.routes.length)})</button>
+      <button onclick="switchTab('services')" id="tab-btn-services" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all flex items-center gap-1">🔄 سرویس‌ها (${toFaDigits(tenant.services.length)})</button>
+      <button onclick="switchTab('events')" id="tab-btn-events" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all flex items-center gap-1">⚡ رویدادها (${toFaDigits(tenant.events.length)})</button>
+      <button onclick="switchTab('audit')" id="tab-btn-audit" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all flex items-center gap-1">📜 لاگ ممیزی (${toFaDigits(tenant.auditLogs.length)})</button>
     </div>
 
     <!-- Tab 1: Students -->
     <div id="tab-content-students" class="tab-pane space-y-4">
       <div class="flex items-center justify-between">
-        <h4 class="font-bold text-white text-sm">دانش‌آموزان ثبت‌شده در این تننت</h4>
+        <h4 class="font-bold text-white text-sm">دانش‌آموزان ثبت‌شده در این تننت (${toFaDigits(tenant.students.length)} نفر)</h4>
         <button onclick="addStudent('${tenant.id}')" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5">
           <span>+</span> افزودن دانش‌آموز جدید
         </button>
       </div>
 
+      ${tenant.students.length > 0 ? `
       <div class="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
         <table class="w-full text-right text-xs">
           <thead class="bg-slate-950 text-slate-400 font-semibold border-b border-slate-800">
@@ -521,17 +552,19 @@ fastify.get('/tenants/:id/manage', async (req, reply) => {
           </tbody>
         </table>
       </div>
+      ` : renderEmptyState('دانش‌آموزی ثبت نشده است', 'برای این تننت هنوز دانش‌آموزی در سامانه تعریف نشده است.', 'افزودن اولین دانش‌آموز', `addStudent('${tenant.id}')`)}
     </div>
 
     <!-- Tab 2: Parents -->
     <div id="tab-content-parents" class="tab-pane hidden space-y-4">
       <div class="flex items-center justify-between">
-        <h4 class="font-bold text-white text-sm">اولیا و والدین دانش‌آموزان (${tenant.name})</h4>
+        <h4 class="font-bold text-white text-sm">اولیا و والدین دانش‌آموزان (${tenant.name}) — ${toFaDigits(tenant.parents.length)} رکورد</h4>
         <button onclick="addParent('${tenant.id}')" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5">
           <span>+</span> افزودن ولی جدید
         </button>
       </div>
 
+      ${tenant.parents.length > 0 ? `
       <div class="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
         <table class="w-full text-right text-xs">
           <thead class="bg-slate-950 text-slate-400 font-semibold border-b border-slate-800">
@@ -570,19 +603,22 @@ fastify.get('/tenants/:id/manage', async (req, reply) => {
           </tbody>
         </table>
       </div>
+      ` : renderEmptyState('اطلاعات اولیایی ثبت نشده است', 'هنوز پرونده اولیا و والدین برای این مدرسه تکمیل نشده است.', 'ثبت ولی جدید', `addParent('${tenant.id}')`)}
     </div>
 
     <!-- Tab 3: Drivers -->
     <div id="tab-content-drivers" class="tab-pane hidden space-y-4">
       <div class="flex items-center justify-between">
-        <h4 class="font-bold text-white text-sm">رانندگان ناوگان این تننت</h4>
+        <h4 class="font-bold text-white text-sm">رانندگان ناوگان این تننت (${toFaDigits(tenant.drivers.length)} نفر)</h4>
         <button onclick="addDriver('${tenant.id}')" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5">
           <span>+</span> افزودن راننده جدید
         </button>
       </div>
+
+      ${tenant.drivers.length > 0 ? `
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         ${tenant.drivers.map(d => `
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-md flex items-center justify-between">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-md flex items-center justify-between" id="drv-card-${d.id}">
           <div>
             <h5 class="font-bold text-white text-sm flex items-center gap-2">
               <span class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-xs">🚐</span>
@@ -597,55 +633,75 @@ fastify.get('/tenants/:id/manage', async (req, reply) => {
         </div>
         `).join('')}
       </div>
+      ` : renderEmptyState('راننده‌ای ثبت نشده است', 'هنوز راننده‌ای برای این مدرسه تعریف نشده است.', 'افزودن راننده', `addDriver('${tenant.id}')`)}
     </div>
 
     <!-- Tab 4: Vehicles -->
     <div id="tab-content-vehicles" class="tab-pane hidden space-y-4">
       <div class="flex items-center justify-between">
-        <h4 class="font-bold text-white text-sm">ناوگان خودرویی تخصیص‌یافته به مدرسه</h4>
+        <h4 class="font-bold text-white text-sm">ناوگان خودرویی تخصیص‌یافته (${toFaDigits(tenant.vehicles.length)} دستگاه)</h4>
         <button onclick="addVehicle('${tenant.id}')" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5">
           <span>+</span> ثبت خودروی جدید
         </button>
       </div>
+
+      ${tenant.vehicles.length > 0 ? `
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         ${tenant.vehicles.map(v => `
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-md flex items-center justify-between">
           <div>
-            <h5 class="font-bold text-white text-sm">${v.model}</h5>
+            <h5 class="font-bold text-white text-sm flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-300 flex items-center justify-center text-xs">🚗</span>
+              ${v.model}
+            </h5>
             <p class="text-xs text-indigo-300 font-mono font-bold mt-1">شماره پلاک: ${v.plate}</p>
-            <p class="text-xs text-slate-400 mt-0.5">ظرفیت: ${v.capacity} نفر | راننده: ${v.driverName}</p>
+            <p class="text-xs text-slate-400 mt-0.5">ظرفیت: ${toFaDigits(v.capacity)} نفر | راننده: ${v.driverName}</p>
             <p class="text-[11px] text-emerald-400 mt-0.5">اعتبار بیمه: ${v.insuranceValid}</p>
           </div>
           <button onclick="alert('ویرایش مشخصات خودرو')" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">✏️ ویرایش</button>
         </div>
         `).join('')}
       </div>
+      ` : renderEmptyState('خودرویی تعریف نشده است', 'ناوگان خودرویی برای این تننت خالی است.', 'ثبت خودرو') }
     </div>
 
     <!-- Tab 5: Routes -->
     <div id="tab-content-routes" class="tab-pane hidden space-y-4">
       <div class="flex items-center justify-between">
-        <h4 class="font-bold text-white text-sm">مسیرهای رفت و برگشت سرویس</h4>
+        <h4 class="font-bold text-white text-sm">مسیرهای رفت و برگشت سرویس (${toFaDigits(tenant.routes.length)} مسیر)</h4>
         <button onclick="alert('ایجاد مسیر جدید')" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5">
-          <span>+</span> افزودن مسیر
+          <span>+</span> افزودن مسیر جدید
         </button>
       </div>
+
+      ${tenant.routes.length > 0 ? `
       <div class="space-y-3">
         ${tenant.routes.map(r => `
         <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs">
           <div>
-            <p class="font-bold text-white text-sm">${r.name}</p>
-            <p class="text-slate-400 mt-1">تعداد ایستگاه‌ها: ${r.stopsCount} ایستگاه | شیفت: ${r.shift}</p>
+            <p class="font-bold text-white text-sm flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-300 flex items-center justify-center text-xs">🗺️</span>
+              ${r.name}
+            </p>
+            <p class="text-slate-400 mt-1">تعداد ایستگاه‌ها: ${toFaDigits(r.stopsCount)} ایستگاه | شیفت: ${r.shift}</p>
           </div>
           <span class="px-2.5 py-1 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">${r.status}</span>
         </div>
         `).join('')}
       </div>
+      ` : renderEmptyState('مسیری تعریف نشده است', 'هنوز مسیری برای این مدرسه ثبت نشده است.', 'افزودن مسیر') }
     </div>
 
     <!-- Tab 6: Services -->
     <div id="tab-content-services" class="tab-pane hidden space-y-4">
-      <h4 class="font-bold text-white text-sm">سرویس‌های فعال و وضعیت حرکت</h4>
+      <div class="flex items-center justify-between">
+        <h4 class="font-bold text-white text-sm">سرویس‌های جاری و وضعیت حرکت ناوگان (${toFaDigits(tenant.services.length)})</h4>
+        <button onclick="alert('تعریف شیفت سرویس جدید')" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5">
+          <span>+</span> تعریف شیفت سرویس
+        </button>
+      </div>
+
+      ${tenant.services.length > 0 ? `
       <div class="space-y-3">
         ${tenant.services.map(srv => `
         <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs">
@@ -657,11 +713,16 @@ fastify.get('/tenants/:id/manage', async (req, reply) => {
         </div>
         `).join('')}
       </div>
+      ` : renderEmptyState('هیچ سرویس فعالی برای امروز ثبت نشده است', 'در حال حاضر هیچ شیفت سرویسی در حال اجرا یا برنامه‌ریزی‌شده در این تننت وجود ندارد.', 'تعریف شیفت سرویس جدید', `alert('فرم ایجاد سرویس آماده شد.')`)}
     </div>
 
     <!-- Tab 7: Events -->
     <div id="tab-content-events" class="tab-pane hidden space-y-4">
-      <h4 class="font-bold text-white text-sm">رویدادهای زنده تردد امروز دانش‌آموزان</h4>
+      <div class="flex items-center justify-between">
+        <h4 class="font-bold text-white text-sm">رویدادهای زنده تردد امروز دانش‌آموزان (${toFaDigits(tenant.events.length)})</h4>
+      </div>
+
+      ${tenant.events.length > 0 ? `
       <div class="space-y-2">
         ${tenant.events.map(ev => `
         <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs">
@@ -669,15 +730,16 @@ fastify.get('/tenants/:id/manage', async (req, reply) => {
             <span class="font-bold text-white">${ev.studentName}</span>
             <span class="text-slate-400 mr-2">— ${ev.type === 'DROPPED_OFF' ? 'پیاده شد در' : 'سوار شد در'} ${ev.stopName}</span>
           </div>
-          <span class="text-emerald-400 font-mono">${ev.time}</span>
+          <span class="text-emerald-400 font-mono font-bold">${ev.time}</span>
         </div>
         `).join('')}
       </div>
+      ` : renderEmptyState('رویداد ترددی ثبت نشده است', 'امروز هنوز رویدادی برای سوار یا پیاده شدن دانش‌آموزان گزارش نشده است.')}
     </div>
 
     <!-- Tab 8: Audit Log -->
     <div id="tab-content-audit" class="tab-pane hidden space-y-4">
-      <h4 class="font-bold text-white text-sm">لاگ ممیزی و تاریخچه اقدامات مدیر ارشد روی این تننت</h4>
+      <h4 class="font-bold text-white text-sm">لاگ ممیزی و تاریخچه اقدامات مدیر ارشد روی این تننت (${toFaDigits(tenant.auditLogs.length)})</h4>
       <div class="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden p-4">
         <div class="space-y-3">
           ${tenant.auditLogs.map(a => `
@@ -699,12 +761,12 @@ fastify.get('/tenants/:id/manage', async (req, reply) => {
     function switchTab(tabId) {
       document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.tab-btn').forEach(el => {
-        el.className = 'tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all';
+        el.className = 'tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all flex items-center gap-1';
       });
       const targetContent = document.getElementById('tab-content-' + tabId);
       const targetBtn = document.getElementById('tab-btn-' + tabId);
       if (targetContent) targetContent.classList.remove('hidden');
-      if (targetBtn) targetBtn.className = 'tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm transition-all';
+      if (targetBtn) targetBtn.className = 'tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm transition-all flex items-center gap-1';
     }
 
     async function addStudent(tenantId) {
@@ -851,8 +913,8 @@ fastify.get('/tenants/:id/view', async (req, reply) => {
         <div><span class="text-slate-400">وضعیت:</span> <span class="font-bold text-emerald-400">${tenant.status}</span></div>
         <div><span class="text-slate-400">شهر و منطقه:</span> <span class="text-white">${tenant.city} — ${tenant.region}</span></div>
         <div><span class="text-slate-400">تاریخ تأسیس:</span> <span class="text-white">${tenant.createdAt}</span></div>
-        <div><span class="text-slate-400">تعداد ناوگان:</span> <span class="text-white font-bold">${tenant.vehiclesCount} دستگاه</span></div>
-        <div><span class="text-slate-400">تعداد دانش‌آموزان:</span> <span class="text-white font-bold">${tenant.studentsCount} نفر</span></div>
+        <div><span class="text-slate-400">تعداد ناوگان:</span> <span class="text-white font-bold">${toFaDigits(tenant.vehiclesCount)} دستگاه</span></div>
+        <div><span class="text-slate-400">تعداد دانش‌آموزان:</span> <span class="text-white font-bold">${toFaDigits(tenant.studentsCount)} نفر</span></div>
       </div>
     </div>
   </div>
