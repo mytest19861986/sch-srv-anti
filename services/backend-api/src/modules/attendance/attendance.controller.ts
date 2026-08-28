@@ -93,21 +93,27 @@ export function attendanceController(
         preHandler: [authenticate, tenantGuard, driverOrAdminOnly]
       },
       async (request: FastifyRequest, reply: FastifyReply) => {
-        const query = request.query as { shift_id?: string };
-        if (!query.shift_id) {
-          return reply.status(400).send({
-            success: false,
-            error: 'VALIDATION_ERROR',
-            message: 'shift_id query parameter is required'
-          });
-        }
-
         const tenantId = request.tenantId!;
         const userId = request.user!.userId;
+        const query = (request.query || {}) as { shift_id?: string };
+
+        let shiftId = query.shift_id;
+        if (!shiftId) {
+          const shifts = await domainRepo.findShiftsForDriver(tenantId, userId);
+          if (shifts.length > 0) {
+            shiftId = shifts[0].id;
+          } else {
+            return reply.status(400).send({
+              success: false,
+              error: 'VALIDATION_ERROR',
+              message: 'shift_id query parameter is required or no active shift assigned'
+            });
+          }
+        }
 
         try {
           const events = await attendanceService.getTenantAttendanceEvents(tenantId);
-          const manifest = await domainRepo.getDriverManifest(tenantId, userId, query.shift_id, events);
+          const manifest = await domainRepo.getDriverManifest(tenantId, userId, shiftId, events);
           return reply.status(200).send({
             success: true,
             tenant_id: tenantId,

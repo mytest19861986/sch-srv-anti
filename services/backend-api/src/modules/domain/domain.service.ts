@@ -188,6 +188,20 @@ export class InMemoryDomainRepository {
     return this.driverShiftAssignments.has(`${tenantId}:${driverId}:${shiftId}`);
   }
 
+  async findShiftsForDriver(tenantId: string, driverUserId: string): Promise<Shift[]> {
+    const driver = await this.findDriverByUserId(tenantId, driverUserId);
+    if (!driver) return [];
+    const shifts: Shift[] = [];
+    for (const key of this.driverShiftAssignments.keys()) {
+      const [tId, dId, sId] = key.split(':');
+      if (tId === tenantId && dId === driver.id) {
+        const shift = this.shifts.get(sId);
+        if (shift) shifts.push(shift);
+      }
+    }
+    return shifts;
+  }
+
   async assignStudentToRoute(tenantId: string, routeId: string, studentId: string): Promise<void> {
     this.routeStudentAssignments.set(`${tenantId}:${routeId}:${studentId}`, {
       tenantId,

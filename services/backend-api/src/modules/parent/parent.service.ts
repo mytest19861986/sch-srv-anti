@@ -49,7 +49,7 @@ export class ParentService {
     const today = new Date().toISOString().split('T')[0];
     const allEvents = await this.attendanceRepo.getAttendanceEventsByTenant(tenantId);
     const studentEvents = allEvents
-      .filter(e => e.studentId === childId && e.clientTimestamp.toISOString().startsWith(today))
+      .filter(e => e.studentId === childId && new Date(e.clientTimestamp).toISOString().startsWith(today))
       .sort((a, b) => new Date(b.clientTimestamp).getTime() - new Date(a.clientTimestamp).getTime());
 
     const latest = studentEvents[0];
@@ -76,7 +76,7 @@ export class ParentService {
         ? {
             event_type: latest.eventType,
             service_id: latest.serviceId,
-            timestamp: latest.clientTimestamp.toISOString()
+            timestamp: new Date(latest.clientTimestamp).toISOString()
           }
         : undefined
     };
@@ -97,7 +97,7 @@ export class ParentService {
     const date = query.date || new Date().toISOString().split('T')[0];
     const allEvents = await this.attendanceRepo.getAttendanceEventsByTenant(tenantId);
     const timelineEvents = allEvents
-      .filter(e => e.studentId === childId && e.clientTimestamp.toISOString().startsWith(date))
+      .filter(e => e.studentId === childId && new Date(e.clientTimestamp).toISOString().startsWith(date))
       .sort((a, b) => new Date(b.clientTimestamp).getTime() - new Date(a.clientTimestamp).getTime());
 
     const page = query.page || 1;
@@ -120,8 +120,8 @@ export class ParentService {
         id: e.id,
         event_type: e.eventType,
         service_id: e.serviceId,
-        client_timestamp: e.clientTimestamp.toISOString(),
-        server_timestamp: e.serverTimestamp.toISOString()
+        client_timestamp: new Date(e.clientTimestamp).toISOString(),
+        server_timestamp: new Date(e.serverTimestamp).toISOString()
       }))
     };
   }
