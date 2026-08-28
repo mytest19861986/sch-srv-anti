@@ -9,7 +9,7 @@ import Fastify from 'fastify';
 const fastify = Fastify({ logger: false });
 
 const PORT = 3001;
-const HOST = '127.0.0.1';
+const HOST = '0.0.0.0';
 
 // Theme & Global Styles
 const HTML_LAYOUT = (title: string, activeTab: string, content: string) => `<!DOCTYPE html>

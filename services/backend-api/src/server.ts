@@ -5,10 +5,62 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
 async function startServer() {
-  const { app, outboxWorker, queueMonitor } = buildApp({
+  const { app, outboxWorker, queueMonitor, authService, userRepository, domainRepository } = buildApp({
     startWorker: true,
     logger: false
   });
+
+  // Seed default demo accounts for instant login
+  try {
+    const schoolPass = await authService.hashPassword('SchoolPass@123');
+    const superPass = await authService.hashPassword('SuperPass@123');
+    const driverPass = await authService.hashPassword('DriverPass@123');
+    const parentPass = await authService.hashPassword('ParentPass@123');
+
+    await userRepository.create({
+      id: 'usr-school-admin-demo',
+      tenantId: 'tenant-school-mehr',
+      email: 'school@mehr.ir',
+      passwordHash: schoolPass,
+      fullName: 'مدیر مدرسه مهر دانش',
+      role: 'SCHOOL_ADMIN',
+      isActive: 'true'
+    });
+
+    await userRepository.create({
+      id: 'usr-super-admin-demo',
+      tenantId: 'system',
+      email: 'admin@platform.ir',
+      passwordHash: superPass,
+      fullName: 'راهبر ارشد کشوری',
+      role: 'SUPER_ADMIN',
+      isActive: 'true'
+    });
+
+    await userRepository.create({
+      id: 'usr-driver-demo',
+      tenantId: 'tenant-school-mehr',
+      email: 'driver@serviceyar.ir',
+      passwordHash: driverPass,
+      fullName: 'راننده سرویس نمونه',
+      role: 'DRIVER',
+      isActive: 'true'
+    });
+
+    await userRepository.create({
+      id: 'usr-parent-demo',
+      tenantId: 'tenant-school-mehr',
+      email: 'parent@serviceyar.ir',
+      passwordHash: parentPass,
+      fullName: 'ولی دانش‌آموز نمونه',
+      role: 'PARENT',
+      isActive: 'true'
+    });
+
+    appLogger.info('🌱 Demo accounts seeded successfully for instant login.');
+  } catch (err) {
+    appLogger.warn('Error seeding demo accounts', err);
+  }
 
   try {
     await app.listen({ port: PORT, host: HOST });
