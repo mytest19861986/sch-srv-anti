@@ -120,8 +120,8 @@ export class InMemoryAttendanceRepository implements IAttendanceRepository {
           throw err;
         }
       } else if (dto.event_type === 'DROPPED_OFF') {
-        if (lastActiveEvent && (lastActiveEvent.eventType === 'DROPPED_OFF' || lastActiveEvent.eventType === 'ABSENT')) {
-          const err: any = new Error('Cannot transition to DROPPED_OFF from current state');
+        if (!lastActiveEvent || lastActiveEvent.eventType !== 'PICKED_UP') {
+          const err: any = new Error('Cannot transition to DROPPED_OFF without prior PICKED_UP');
           err.statusCode = 409;
           err.code = 'INVALID_STATE_TRANSITION';
           throw err;

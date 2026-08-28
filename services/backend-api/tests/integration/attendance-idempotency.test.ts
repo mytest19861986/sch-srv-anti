@@ -84,7 +84,7 @@ describe('Vertical Slice 1: Attendance Idempotency & Transactional Outbox', () =
     const payload = {
       student_id: 'student-202',
       service_id: 'service-707',
-      event_type: 'DROPPED_OFF',
+      event_type: 'PICKED_UP',
       client_generated_id: '987fcdeb-51a2-43f7-9abc-def012345678',
       client_timestamp: new Date().toISOString()
     };

@@ -150,7 +150,7 @@ describe('Vertical Slice 4: Outbox Worker & Async Notification Dispatcher', () =
       body: JSON.stringify({
         student_id: 'student-99',
         service_id: 'service-1',
-        event_type: 'DROPPED_OFF',
+        event_type: 'PICKED_UP',
         client_generated_id: '22222222-2222-2222-2222-222222222222',
         client_timestamp: new Date().toISOString()
       })

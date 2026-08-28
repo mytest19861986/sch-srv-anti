@@ -219,7 +219,7 @@ describe('Vertical Slice 2: Multi-Tenant Isolation & Role-Based Access Control (
       body: JSON.stringify({
         student_id: 'student-b-1',
         service_id: 'service-b-1',
-        event_type: 'DROPPED_OFF',
+        event_type: 'PICKED_UP',
         client_generated_id: '66666666-7777-8888-9999-000000000000',
         client_timestamp: new Date().toISOString()
       })

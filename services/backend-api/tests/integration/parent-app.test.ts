@@ -223,7 +223,7 @@ describe('Vertical Slice 7: Parent App API, Child Timeline & IDOR Prevention', (
       body: JSON.stringify({
         student_id: 'student-a1',
         service_id: 'service-1',
-        event_type: 'DROPPED_OFF',
+        event_type: 'PICKED_UP',
         client_generated_id: '77777777-2222-0000-0000-000000000002',
         client_timestamp: new Date().toISOString()
       })
