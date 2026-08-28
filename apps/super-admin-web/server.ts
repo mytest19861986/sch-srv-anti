@@ -1,10 +1,12 @@
 /**
  * Super Admin Web Platform Portal Server (Comprehensive Management & Live KPIs)
  * Order #60, #62 & #63 Implementation:
- * - 8 Fully Functional Tabs with Persian Badges (toPersianDigits)
+ * - 2-Tier Balanced Actions Column with Fixed min-w-[280px]
+ * - 8 Fully Functional Tabs with Persian Badges & Dynamic Pagination
+ * - 36 Full Realistic Parent Records for Alborz School Matching 36 Badge Count
+ * - Dynamic Summary Bar ("نمایش N از M رکورد — صفحه X از Y")
  * - EmptyState Component for Zero-Data Scenarios
  * - Full CRUD & Audit Log with actor_role=SUPER_ADMIN
- * - Balanced 2-Tier Actions Column on Overview
  * Port: 3002 (0.0.0.0)
  */
 
@@ -40,6 +42,46 @@ interface TenantRecord {
   auditLogs: Array<{ id: string; timestamp: string; actor: string; action: string; details: string }>;
 }
 
+// Generate 36 realistic parent records for Alborz High School
+const ALBORZ_PARENTS: Array<{ id: string; name: string; phone: string; nationalCode: string; children: string; address: string }> = [
+  { id: 'par-201', name: 'کامران کاظمی (پدر)', phone: '۰۹۱۲۸۸۸۱۱۱۱', nationalCode: '۰۱۱۹۹۲۲۳۳۴', children: 'آرمین کاظمی (پایه دهم)', address: 'تهران، امیرآباد شمالی، خ شانزدهم' },
+  { id: 'par-202', name: 'فرشته شایان (مادر)', phone: '۰۹۱۲۸۸۸۲۲۲۲', nationalCode: '۰۲۲۸۸۳۳۴۴۵', children: 'بردیا شایان (پایه یازدهم)', address: 'تهران، کوی نصر (گیشا)، خ ۲۱' },
+  { id: 'par-203', name: 'بهزاد فراهانی (پدر)', phone: '۰۹۱۲۸۸۸۳۳۳۳', nationalCode: '۰۳۳۷۷۴۴۵۵۶', children: 'سامان فراهانی (پایه دوازدهم)', address: 'تهران، میدان فاطمی، خ بیستون' },
+  { id: 'par-204', name: 'سارا کریمی (مادر)', phone: '۰۹۱۲۸۸۸۴۴۴۴', nationalCode: '۰۴۴۶۶۵۵۶۶۷', children: 'دانیال کریمی (پایه دهم)', address: 'تهران، بلوار کشاورز، خ وصال' },
+  { id: 'par-205', name: 'مجید صادقی (پدر)', phone: '۰۹۱۲۸۸۸۵۵۵۵', nationalCode: '۰۵۵۵۵۶۶۷۷۸', children: 'پرهام صادقی (پایه دهم)', address: 'تهران، کارگر شمالی، خ نصرت' },
+  { id: 'par-206', name: 'زهره ابراهیمی (مادر)', phone: '۰۹۱۲۸۸۸۶۶۶۶', nationalCode: '۰۶۶۴۴۷۷۸۸۹', children: 'ایلیا ابراهیمی (پایه یازدهم)', address: 'تهران، یوسف‌آباد، خ اسدآبادی' },
+  { id: 'par-207', name: 'محسن اکبری (پدر)', phone: '۰۹۱۲۸۸۸۷۷۷۷', nationalCode: '۰۷۷۳۳۸۸۹۹۰', children: 'کیان اکبری (پایه دوازدهم)', address: 'تهران، میدان انقلاب، خ آزادی' },
+  { id: 'par-208', name: 'مریم طاهری (مادر)', phone: '۰۹۱۲۸۸۸۸۸۸۸', nationalCode: '۰۸۸۲۲۹۹۰۰۱', children: 'سینا طاهری (پایه دهم)', address: 'تهران، جمالزاده شمالی، خ فرصت' },
+  { id: 'par-209', name: 'حسن رستمی (پدر)', phone: '۰۹۱۲۸۸۸۹۹۹۹', nationalCode: '۰۹۹۱۱۰۱۱۲۳', children: 'مانی رستمی (پایه یازدهم)', address: 'تهران، اسکندری شمالی' },
+  { id: 'par-210', name: 'فاطمه جلالی (مادر)', phone: '۰۹۱۲۷۷۷۱۱۱۱', nationalCode: '۱۰۰۹۹۲۲۳۳۴', children: 'آراد جلالی (پایه دوازدهم)', address: 'تهران، کارگر جنوبی، خ لبافی‌نژاد' },
+  { id: 'par-211', name: 'سعید مرادی (پدر)', phone: '۰۹۱۲۷۷۷۲۲۲۲', nationalCode: '۱۱۱۸۸۳۳۴۴۵', children: 'نوید مرادی (پایه دهم)', address: 'تهران، میدان توحید، خ بهبودی' },
+  { id: 'par-212', name: 'الهام مقدسی (مادر)', phone: '۰۹۱۲۷۷۷۳۳۳۳', nationalCode: '۱۲۲۷۷۴۴۵۵۶', children: 'متین مقدسی (پایه یازدهم)', address: 'تهران، ستارخان، خ دریان‌نو' },
+  { id: 'par-213', name: 'داوود حیدری (پدر)', phone: '۰۹۱۲۷۷۷۴۴۴۴', nationalCode: '۱۳۳۶۶۵۵۶۶۷', children: 'سپهر حیدری (پایه دوازدهم)', address: 'تهران، پاتریس لومومبا' },
+  { id: 'par-214', name: 'نرگس سلطانی (مادر)', phone: '۰۹۱۲۷۷۷۵۵۵۵', nationalCode: '۱۴۴۵۵۶۶۷۷۸', children: 'آبتین سلطانی (پایه دهم)', address: 'تهران، شهرآرا، خ پاشایی' },
+  { id: 'par-215', name: 'حمیدرضا نجفی (پدر)', phone: '۰۹۱۲۷۷۷۶۶۶۶', nationalCode: '۱۵۵۴۴۷۷۸۸۹', children: 'شایان نجفی (پایه یازدهم)', address: 'تهران، جلال آل‌احمد' },
+  { id: 'par-216', name: 'شکوفه احمدی (مادر)', phone: '۰۹۱۲۷۷۷۷۷۷۷', nationalCode: '۱۶۶۳۳۸۸۹۹۰', children: 'امیرحسین احمدی (پایه دوازدهم)', address: 'تهران، میدان سلماس' },
+  { id: 'par-217', name: 'اصغر کریمی (پدر)', phone: '۰۹۱۲۷۷۷۸۸۸۸', nationalCode: '۱۷۷۲۲۹۹۰۰۱', children: 'بهراد کریمی (پایه دهم)', address: 'تهران، فتحی شقاقی' },
+  { id: 'par-218', name: 'مینا رحیمی (مادر)', phone: '۰۹۱۲۷۷۷۹۹۹۹', nationalCode: '۱۸۸۱۱۰۱۱۲۳', children: 'عرشیا رحیمی (پایه یازدهم)', address: 'تهران، خ فاطمی، ک چهارم' },
+  { id: 'par-219', name: 'علی بهرامی (پدر)', phone: '۰۹۱۲۶۶۶۱۱۱۱', nationalCode: '۱۹۹۰۹۱۲۲۳۴', children: 'ماهان بهرامی (پایه دوازدهم)', address: 'تهران، میدان گل‌ها' },
+  { id: 'par-220', name: 'فریبا نوروزی (مادر)', phone: '۰۹۱۲۶۶۶۲۲۲۲', nationalCode: '۲۰۸۹۸۲۳۳۴۵', children: 'کوروش نوروزی (پایه دهم)', address: 'تهران، امیرآباد، خ هفدهم' },
+  { id: 'par-221', name: 'منصور یوسفی (پدر)', phone: '۰۹۱۲۶۶۶۳۳۳۳', nationalCode: '۲۱۷۸۷۳۴۴۵۶', children: 'سروش یوسفی (پایه یازدهم)', address: 'تهران، کارگر شمالی، ک نصر' },
+  { id: 'par-222', name: 'طاهره اسدی (مادر)', phone: '۰۹۱۲۶۶۶۴۴۴۴', nationalCode: '۲۲۶۷۶۴۵۵۶۷', children: 'رهام اسدی (پایه دوازدهم)', address: 'تهران، قزل‌قلعه' },
+  { id: 'par-223', name: 'پیمان صالحی (پدر)', phone: '۰۹۱۲۶۶۶۵۵۵۵', nationalCode: '۲۳۵۶۵۵۶۶۷۸', children: 'امیررضا صالحی (پایه دهم)', address: 'تهران، خ کاج جنوبی' },
+  { id: 'par-224', name: 'رویا قاسم‌پور (مادر)', phone: '۰۹۱۲۶۶۶۶۶۶۶', nationalCode: '۲۴۴۵۴۶۷۷۸۹', children: 'طاها قاسم‌پور (پایه یازدهم)', address: 'تهران، گیشا، ک پنجم' },
+  { id: 'par-225', name: 'کاظم زارعی (پدر)', phone: '۰۹۱۲۶۶۶۷۷۷۷', nationalCode: '۲۵۳۴۳۷۸۸۹۰', children: 'کیارش زارعی (پایه دوازدهم)', address: 'تهران، بلوار کشاورز' },
+  { id: 'par-226', name: 'مهناز شریفی (مادر)', phone: '۰۹۱۲۶۶۶۸۸۸۸', nationalCode: '۲۶۲۳۲۸۹۹۰۱', children: 'هیراد شریفی (پایه دهم)', address: 'تهران، خ فلسطین شمالی' },
+  { id: 'par-227', name: 'عطا پوراحمد (پدر)', phone: '۰۹۱۲۶۶۶۹۹۹۹', nationalCode: '۲۷۱۲۱۹۰۰۱۲', children: 'آرتین پوراحمد (پایه یازدهم)', address: 'تهران، خ طالقانی غربی' },
+  { id: 'par-228', name: 'سمیرا عسگری (مادر)', phone: '۰۹۱۲۵۵۵۱۱۱۱', nationalCode: '۲۸۰۱۰۹۱۱۲۳', children: 'رادین عسگری (پایه دوازدهم)', address: 'تهران، خ ۱۶ آذر' },
+  { id: 'par-229', name: 'اکبر عبدی (پدر)', phone: '۰۹۱۲۵۵۵۲۲۲۲', nationalCode: '۲۸۹۹۹۸۲۲۳۴', children: 'سهراب عبدی (پایه دهم)', address: 'تهران، خ حجاب' },
+  { id: 'par-230', name: 'لادن موسوی (مادر)', phone: '۰۹۱۲۵۵۵۳۳۳۳', nationalCode: '۲۹۸۸۸۷۳۳۴۵', children: 'آرمین موسوی (پایه یازدهم)', address: 'تهران، بلوار مرزداران' },
+  { id: 'par-231', name: 'حامد تقوی (پدر)', phone: '۰۹۱۲۵۵۵۴۴۴۴', nationalCode: '۳۰۷۷۷۶۴۴۵۶', children: 'پویا تقوی (پایه دوازدهم)', address: 'تهران، کوی دانشگاه' },
+  { id: 'par-232', name: 'پروانه خلیلی (مادر)', phone: '۰۹۱۲۵۵۵۵۵۵۵', nationalCode: '۳۱۶۶۶۵۵۵۶۷', children: 'فربد خلیلی (پایه دهم)', address: 'تهران، گیشا، ک سی‌ام' },
+  { id: 'par-233', name: 'داریوش فرهمند (پدر)', phone: '۰۹۱۲۵۵۵۶۶۶۶', nationalCode: '۳۲۵۵۵۴۶۶۷۸', children: 'ارسلان فرهمند (پایه یازدهم)', address: 'تهران، بزرگراه چمران' },
+  { id: 'par-234', name: 'سیمین باقری (مادر)', phone: '۰۹۱۲۵۵۵۷۷۷۷', nationalCode: '۳۳۴۴۴۳۷۷۸۹', children: 'رایان باقری (پایه دوازدهم)', address: 'تهران، یوسف‌آباد، ک ۳۴' },
+  { id: 'par-235', name: 'وحید زمانی (پدر)', phone: '۰۹۱۲۵۵۵۸۸۸۸', nationalCode: '۳۴۳۳۳۲۸۸۹۰', children: 'سام زمانی (پایه دهم)', address: 'تهران، خ زرتشت غربی' },
+  { id: 'par-236', name: 'گیتی صبوری (مادر)', phone: '۰۹۱۲۵۵۵۹۹۹۹', nationalCode: '۳۵۲۲۲۱۹۹۰۱', children: 'آریا صبوری (پایه یازدهم)', address: 'تهران، میدان جهاد' }
+];
+
 let TENANTS: TenantRecord[] = [
   {
     id: 'school-tehran-alborz',
@@ -56,12 +98,7 @@ let TENANTS: TenantRecord[] = [
       { id: 'std-203', name: 'سامان فراهانی', nationalCode: '۰۳۳۴۴۵۵۶۶۷', grade: 'پایه دوازدهم', route: 'مسیر ج — فاطمی', status: 'سوار بر سرویس' },
       { id: 'std-204', name: 'دانیال کریمی', nationalCode: '۰۴۴۵۵۶۶۷۷۸', grade: 'پایه دهم', route: 'مسیر الف — کارگر شمالی', status: 'پیاده شد در مقصد' }
     ],
-    parents: [
-      { id: 'par-201', name: 'کامران کاظمی (پدر)', phone: '۰۹۱۲۸۸۸۱۱۱۱', nationalCode: '۰۱۱۹۹۲۲۳۳۴', children: 'آرمین کاظمی (پایه دهم)', address: 'تهران، امیرآباد شمالی، خ شانزدهم' },
-      { id: 'par-202', name: 'فرشته شایان (مادر)', phone: '۰۹۱۲۸۸۸۲۲۲۲', nationalCode: '۰۲۲۸۸۳۳۴۴۵', children: 'بردیا شایان (پایه یازدهم)', address: 'تهران، کوی نصر (گیشا)، خ ۲۱' },
-      { id: 'par-203', name: 'بهزاد فراهانی (پدر)', phone: '۰۹۱۲۸۸۸۳۳۳۳', nationalCode: '۰۳۳۷۷۴۴۵۵۶', children: 'سامان فراهانی (پایه دوازدهم)', address: 'تهران، میدان فاطمی، خ بیستون' },
-      { id: 'par-204', name: 'سارا کریمی (مادر)', phone: '۰۹۱۲۸۸۸۴۴۴۴', nationalCode: '۰۴۴۶۶۵۵۶۶۷', children: 'دانیال کریمی (پایه دهم)', address: 'تهران، بلوار کشاورز، خ وصال' }
-    ],
+    parents: ALBORZ_PARENTS,
     drivers: [
       { id: 'drv-201', name: 'مرتضی نوری', phone: '۰۹۱۲۵۵۵۶۶۷۷', vehicle: 'مینی‌بوس هیوندای', plate: '۳۳ع۴۵۶-۱۱', route: 'مسیر الف — کارگر و امیرآباد' },
       { id: 'drv-202', name: 'قاسم صادقی', phone: '۰۹۱۲۶۶۶۷۷۸۸', vehicle: 'ون غزال', plate: '۲۲ب۹۹۱-۴۴', route: 'مسیر ب — گیشا' },
@@ -77,7 +114,7 @@ let TENANTS: TenantRecord[] = [
       { id: 'rt-202', name: 'مسیر ب — گیشا و جلال آل‌احمد', stopsCount: 6, shift: 'صبح و عصر', status: 'فعال' },
       { id: 'rt-203', name: 'مسیر ج — فاطمی و فلسطین', stopsCount: 7, shift: 'صبح و عصر', status: 'فعال' }
     ],
-    services: [], // Intentionally empty to showcase EmptyState component for Order #63
+    services: [], // Intentionally empty to showcase EmptyState component
     events: [
       { id: 'ev-201', studentName: 'آرمین کاظمی', type: 'DROPPED_OFF', stopName: 'درب اصلی دبیرستان البرز', time: '۰۷:۲۰:۰۰' },
       { id: 'ev-202', studentName: 'بردیا شایان', type: 'DROPPED_OFF', stopName: 'درب اصلی دبیرستان البرز', time: '۰۷:۲۴:۳۰' },
@@ -551,14 +588,22 @@ fastify.get('/tenants/:id/manage', async (req, reply) => {
             `).join('')}
           </tbody>
         </table>
+        <!-- Summary Bar -->
+        <div class="p-3 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+          <span>نمایش ${toFaDigits(tenant.students.length)} از ${toFaDigits(tenant.students.length)} رکورد</span>
+          <span class="text-indigo-300 font-medium">صفحه ۱ از ۱</span>
+        </div>
       </div>
       ` : renderEmptyState('دانش‌آموزی ثبت نشده است', 'برای این تننت هنوز دانش‌آموزی در سامانه تعریف نشده است.', 'افزودن اولین دانش‌آموز', `addStudent('${tenant.id}')`)}
     </div>
 
-    <!-- Tab 2: Parents -->
+    <!-- Tab 2: Parents (With Full Pagination Support) -->
     <div id="tab-content-parents" class="tab-pane hidden space-y-4">
       <div class="flex items-center justify-between">
-        <h4 class="font-bold text-white text-sm">اولیا و والدین دانش‌آموزان (${tenant.name}) — ${toFaDigits(tenant.parents.length)} رکورد</h4>
+        <div>
+          <h4 class="font-bold text-white text-sm">اولیا و والدین دانش‌آموزان (${tenant.name})</h4>
+          <p class="text-xs text-slate-400 mt-0.5">شمار کل در پایگاه داده: <span class="text-emerald-400 font-bold font-mono">${toFaDigits(tenant.parents.length)} ولی</span></p>
+        </div>
         <button onclick="addParent('${tenant.id}')" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5">
           <span>+</span> افزودن ولی جدید
         </button>
@@ -566,7 +611,7 @@ fastify.get('/tenants/:id/manage', async (req, reply) => {
 
       ${tenant.parents.length > 0 ? `
       <div class="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
-        <table class="w-full text-right text-xs">
+        <table class="w-full text-right text-xs" id="parents-table">
           <thead class="bg-slate-950 text-slate-400 font-semibold border-b border-slate-800">
             <tr>
               <th class="p-3.5">نام ولی</th>
@@ -577,9 +622,9 @@ fastify.get('/tenants/:id/manage', async (req, reply) => {
               <th class="p-3.5 text-center">اقدامات ویرایشی مدیر کل</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-800 text-slate-300">
-            ${tenant.parents.map(p => `
-            <tr class="hover:bg-slate-800/40 transition-colors" id="par-row-${p.id}">
+          <tbody class="divide-y divide-slate-800 text-slate-300" id="parents-tbody">
+            ${tenant.parents.map((p, idx) => `
+            <tr class="parent-row hover:bg-slate-800/40 transition-colors ${idx >= 10 ? 'hidden' : ''}" data-idx="${idx}" id="par-row-${p.id}">
               <td class="p-3.5 font-bold text-white flex items-center gap-2">
                 <span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center text-xs">👤</span>
                 ${p.name}
@@ -602,6 +647,22 @@ fastify.get('/tenants/:id/manage', async (req, reply) => {
             `).join('')}
           </tbody>
         </table>
+
+        <!-- Summary & Pagination Controls -->
+        <div class="p-3.5 bg-slate-950/80 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div class="text-slate-400" id="parents-summary-text">
+            نمایش <span class="font-bold text-white" id="parents-showing-count">۱۰</span> از <span class="font-bold text-white">${toFaDigits(tenant.parents.length)}</span> رکورد — صفحه <span class="font-bold text-indigo-300" id="parents-current-page">۱</span> از <span class="font-bold text-indigo-300" id="parents-total-pages">${toFaDigits(Math.ceil(tenant.parents.length / 10))}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="changeParentsPage(-1)" id="btn-parents-prev" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40 disabled:hover:bg-slate-800 text-xs font-semibold transition-all">
+              قبلی
+            </button>
+            <span class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 font-mono text-indigo-300" id="parents-page-badge">۱ / ${toFaDigits(Math.ceil(tenant.parents.length / 10))}</span>
+            <button onclick="changeParentsPage(1)" id="btn-parents-next" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40 disabled:hover:bg-slate-800 text-xs font-semibold transition-all">
+              بعدی
+            </button>
+          </div>
+        </div>
       </div>
       ` : renderEmptyState('اطلاعات اولیایی ثبت نشده است', 'هنوز پرونده اولیا و والدین برای این مدرسه تکمیل نشده است.', 'ثبت ولی جدید', `addParent('${tenant.id}')`)}
     </div>
@@ -758,6 +819,56 @@ fastify.get('/tenants/:id/manage', async (req, reply) => {
   </div>
 
   <script>
+    let curParentsPage = 1;
+    const totalParents = ${tenant.parents.length};
+    const pageSize = 10;
+    const totalPages = Math.ceil(totalParents / pageSize);
+
+    function toFa(num) {
+      const fa = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+      return String(num).replace(/[0-9]/g, w => fa[+w]);
+    }
+
+    function renderParentsPagination() {
+      const rows = document.querySelectorAll('.parent-row');
+      const start = (curParentsPage - 1) * pageSize;
+      const end = start + pageSize;
+      let visibleCount = 0;
+
+      rows.forEach(r => {
+        const idx = parseInt(r.getAttribute('data-idx'));
+        if (idx >= start && idx < end) {
+          r.classList.remove('hidden');
+          visibleCount++;
+        } else {
+          r.classList.add('hidden');
+        }
+      });
+
+      const countEl = document.getElementById('parents-showing-count');
+      const curPageEl = document.getElementById('parents-current-page');
+      const totalPagesEl = document.getElementById('parents-total-pages');
+      const pageBadgeEl = document.getElementById('parents-page-badge');
+      const btnPrev = document.getElementById('btn-parents-prev');
+      const btnNext = document.getElementById('btn-parents-next');
+
+      if (countEl) countEl.innerText = toFa(visibleCount);
+      if (curPageEl) curPageEl.innerText = toFa(curParentsPage);
+      if (totalPagesEl) totalPagesEl.innerText = toFa(totalPages);
+      if (pageBadgeEl) pageBadgeEl.innerText = toFa(curParentsPage) + ' / ' + toFa(totalPages);
+
+      if (btnPrev) btnPrev.disabled = (curParentsPage <= 1);
+      if (btnNext) btnNext.disabled = (curParentsPage >= totalPages);
+    }
+
+    function changeParentsPage(delta) {
+      const newPage = curParentsPage + delta;
+      if (newPage >= 1 && newPage <= totalPages) {
+        curParentsPage = newPage;
+        renderParentsPagination();
+      }
+    }
+
     function switchTab(tabId) {
       document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.tab-btn').forEach(el => {
@@ -767,6 +878,10 @@ fastify.get('/tenants/:id/manage', async (req, reply) => {
       const targetBtn = document.getElementById('tab-btn-' + tabId);
       if (targetContent) targetContent.classList.remove('hidden');
       if (targetBtn) targetBtn.className = 'tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm transition-all flex items-center gap-1';
+
+      if (tabId === 'parents') {
+        renderParentsPagination();
+      }
     }
 
     async function addStudent(tenantId) {
@@ -1043,7 +1158,7 @@ fastify.post('/api/v1/super-admin/tenants/:id/parents', async (req, reply) => {
     children: body.children,
     address: body.address
   };
-  tenant.parents.push(newPar);
+  tenant.parents.unshift(newPar);
   tenant.auditLogs.unshift({
     id: `aud-${Date.now()}`,
     timestamp: new Date().toLocaleString('fa-IR'),
