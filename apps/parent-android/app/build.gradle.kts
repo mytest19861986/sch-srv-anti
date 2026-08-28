@@ -6,15 +6,15 @@ plugins {
 }
 
 android {
-    namespace = "ir.school.parent"
+    namespace = "ir.serviceyar.parent"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "ir.school.parent"
+        applicationId = "ir.serviceyar.parent"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 10200
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -22,12 +22,12 @@ android {
         }
 
         buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:3000/\"")
-        buildConfigField("Boolean", "USE_MOCK_FCM", "true")
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         debug {
@@ -48,6 +48,11 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.11"
     }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
 }
 
 dependencies {
@@ -55,8 +60,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.navigation.compose)
-
+    
     // Compose
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
@@ -69,7 +73,6 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
-    implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)
 
@@ -83,8 +86,10 @@ dependencies {
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.logging)
 
-    // WorkManager & Security
-    implementation(libs.androidx.work.runtime.ktx)
+    // WorkManager
+    implementation(libs.androidx.work.runtime-ktx)
+
+    // Security Crypto
     implementation(libs.androidx.security.crypto)
 
     // Testing

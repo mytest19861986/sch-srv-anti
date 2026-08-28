@@ -6,15 +6,15 @@ plugins {
 }
 
 android {
-    namespace = "ir.school.driver"
+    namespace = "ir.serviceyar.driver"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "ir.school.driver"
+        applicationId = "ir.serviceyar.driver"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 10200
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -26,7 +26,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         debug {
@@ -86,7 +87,7 @@ dependencies {
     implementation(libs.okhttp.logging)
 
     // WorkManager
-    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.work.runtime-ktx)
 
     // Security Crypto
     implementation(libs.androidx.security.crypto)
