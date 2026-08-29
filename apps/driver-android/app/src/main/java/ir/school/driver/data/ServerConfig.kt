@@ -1,6 +1,11 @@
 package ir.school.driver.data
 
 import android.content.Context
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.util.concurrent.TimeUnit
 
 object ServerConfig {
     private const val PREFS = "server_config"
@@ -19,5 +24,26 @@ object ServerConfig {
         }
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .edit().putString(KEY_BASE_URL, cleanUrl).apply()
+    }
+
+    suspend fun testHealthConnection(context: Context, customUrl: String? = null): Pair<Boolean, String> = withContext(Dispatchers.IO) {
+        val baseUrl = (customUrl ?: getBaseUrl(context)).trim().trimEnd('/')
+        val targetUrl = "$baseUrl/health/live"
+        try {
+            val request = Request.Builder().url(targetUrl).build()
+            val client = OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS)
+                .build()
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    Pair(true, "✅ اتصال برقرار شد (HTTP ${response.code})\nآدرس: $targetUrl")
+                } else {
+                    Pair(false, "⚠️ پاسخ نامعتبر (HTTP ${response.code})\nآدرس: $targetUrl")
+                }
+            }
+        } catch (e: Exception) {
+            Pair(false, "❌ عدم برقراری ارتباط:\nآدرس: $targetUrl\nعلت: ${e.javaClass.simpleName}: ${e.message}")
+        }
     }
 }

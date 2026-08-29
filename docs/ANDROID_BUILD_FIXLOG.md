@@ -13,6 +13,7 @@
 | **FIX-003** | 2026-08-29 | AndroidX not enabled + OutOfMemoryError + Wrapper missing + namespace mismatch | gradle.properties نبود، تنظیمات در wrapper بودند، namespace≠پکیج | ایجاد gradle.properties، پاکسازی wrapper، تفکیک namespace/applicationId | ✅ **VERIFIED** |
 | **FIX-004** | 2026-08-29 | اتصال به سرور محلی در Pilot خانگی | هاردکد بودن آدرس و بلاک شدن HTTP | افزودن آدرس سرور قابل تنظیم + cleartext traffic + ApiClient داینامیک | ✅ **VERIFIED** |
 | **FIX-007** | 2026-08-29 | بلاک شدن ترافیک HTTP در برخی نسخه‌های اندروید | نبود پیکربندی امنیت شبکه | ایجاد network_security_config.xml + اتصال به AndroidManifest + لاگ دیباگ | ✅ **VERIFIED** |
+| **FIX-008** | 2026-08-29 | ابهام در تشخیص خطاهای اتصال و URL واقعی | عدم وجود ابزار تست درون‌برنامه‌ای | افزودن جعبه تشخیص اتصال + پیش‌چک سلامت `/health/live` + برچسب FIX-008 در UI | ✅ **VERIFIED** |
 
 ---
 

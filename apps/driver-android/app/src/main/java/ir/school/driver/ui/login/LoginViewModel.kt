@@ -14,7 +14,7 @@ sealed interface LoginUiState {
     object Idle : LoginUiState
     object Loading : LoginUiState
     object Success : LoginUiState
-    data class Error(val message: String) : LoginUiState
+    data class Error(val message: String, val fullDetails: String? = null) : LoginUiState
 }
 
 @HiltViewModel
@@ -25,7 +25,7 @@ class LoginViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    fun login(email: String, password: String) {
+    fun login(email: String, password: String, targetUrl: String = "") {
         if (email.isBlank() || password.isBlank()) {
             _uiState.value = LoginUiState.Error("لطفاً نام کاربری و رمز عبور را وارد کنید")
             return
@@ -33,15 +33,18 @@ class LoginViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.value = LoginUiState.Loading
+            val urlClean = targetUrl.trim().trimEnd('/')
             repository.login(email.trim(), password)
                 .onSuccess {
                     _uiState.value = LoginUiState.Success
                 }
                 .onFailure { error ->
-                    _uiState.value = LoginUiState.Error(
-                        if (error.message == "INVALID_CREDENTIALS") "ایمیل یا رمز عبور اشتباه است"
-                        else "خطا در برقراری ارتباط با سرور"
-                    )
+                    val cleanMsg = if (error.message == "INVALID_CREDENTIALS") {
+                        "ایمیل یا رمز عبور اشتباه است"
+                    } else {
+                        "خطا در برقراری ارتباط با سرور:\n$urlClean/api/v1/auth/login\nعلت: ${error.javaClass.simpleName}: ${error.message}"
+                    }
+                    _uiState.value = LoginUiState.Error(cleanMsg)
                 }
         }
     }
