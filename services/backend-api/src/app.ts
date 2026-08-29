@@ -22,6 +22,8 @@ import { registerTracingMiddleware } from './shared/observability/tracing.middle
 import { healthController } from './shared/health/health.controller.js';
 import { QueueMonitorService } from './shared/observability/queue-monitor.service.js';
 
+import cors from '@fastify/cors';
+
 export interface AppOptions {
   attendanceRepository?: IAttendanceRepository;
   userRepository?: InMemoryUserRepository;
@@ -58,6 +60,14 @@ export function buildApp(opts: AppOptions = {}): {
 } {
   const app = Fastify({
     logger: opts.logger ?? false
+  });
+
+  // Global Official CORS Registration (Supports localhost, 127.0.0.1, 192.168.1.110 and all Wi-Fi clients)
+  app.register(cors, {
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'X-Tenant-Id'],
+    credentials: true
   });
 
   // 1. Tracing & Request Observability Hook

@@ -20,7 +20,7 @@ const HOST = '0.0.0.0';
 fastify.get('/manifest.json', async (req, reply) => {
   reply.header('Content-Type', 'application/manifest+json; charset=utf-8').send({
     name: 'سرویس یار — نسخه اولیا و والدین',
-    short_name: 'سرویس‌یار اولیا',
+    short_name: 'سرویس‌یار والدین',
     description: 'سامانه هوشمند رهگیری زنده سرویس مدرسه و ثبت مرخصی دانش‌آموز ویژه اولیا',
     start_url: '/',
     display: 'standalone',
@@ -319,7 +319,16 @@ fastify.get('/', async (req, reply) => {
         showDashboardView(data.user);
         await fetchParentChildren();
       } catch (err) {
-        errorEl.textContent = err.message || 'خطا در ارتباط با سرور. لطفاً دوباره تلاش کنید.';
+        const isNetworkErr = !err.message || err.message.toLowerCase().includes('fetch') || err.message.toLowerCase().includes('network') || err.message.toLowerCase().includes('failed');
+        const userMsg = isNetworkErr
+          ? 'اتصال به سرور برقرار نشد — بررسی کنید سرور و شبکه Wi-Fi روشن است.'
+          : (err.message || 'خطا در ارتباط با سرور.');
+        errorEl.innerHTML = \`
+          <div class="p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs text-center space-y-1.5">
+            <p>⚠️ \${userMsg}</p>
+            <button type="button" onclick="handleLogin(event)" class="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg font-bold text-[11px] transition-all">🔄 تلاش مجدد</button>
+          </div>
+        \`;
         errorEl.classList.remove('hidden');
       } finally {
         submitBtn.disabled = false;
@@ -388,9 +397,19 @@ fastify.get('/', async (req, reply) => {
           })
         );
 
-        renderChildren(fullChildrenData);
       } catch (err) {
-        container.innerHTML = '<div class="glass p-4 rounded-2xl text-center text-xs text-rose-400">خطا: ' + err.message + '</div>';
+        const isNetworkErr = !err.message || err.message.toLowerCase().includes('fetch') || err.message.toLowerCase().includes('network') || err.message.toLowerCase().includes('failed');
+        const userMsg = isNetworkErr
+          ? 'اتصال به سرور برقرار نشد — بررسی کنید سرور روشن است'
+          : (err.message || 'خطا در بارگذاری اطلاعات');
+        container.innerHTML = \`
+          <div class="glass p-5 rounded-3xl text-center space-y-3 border border-rose-500/30 shadow-lg">
+            <p class="text-xs text-rose-300 font-bold">⚠️ \\\${userMsg}</p>
+            <button onclick="fetchParentChildren()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md">
+              🔄 تلاش مجدد
+            </button>
+          </div>
+        \`;
       }
     }
 

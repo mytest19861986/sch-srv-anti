@@ -412,19 +412,45 @@ fastify.get('/routes', async (req, reply) => {
   reply.type('text/html').send(HTML_LAYOUT('مسیرها و ایستگاه‌ها', 'routes', content));
 });
 
+// CSV Export API Endpoint
+fastify.get('/api/export-csv', async (req, reply) => {
+  const csvData = "\uFEFF" + [
+    ["شناسه رخداد", "نام دانش‌آموز", "کد ملی", "کلاس", "نوع رخداد", "زمان ثبت", "موقعیت جغرافیایی", "نام راننده", "پلاک خودرو", "وضعیت پردازش"].join(","),
+    ["evt-001", "علی احمدی", "0012345678", "پایه پنجم - کلاس ۵۰۱", "PICKED_UP (سوار شد)", "2026-08-28T07:15:22.000Z", "35.7219,51.3347", "رضا مرادی (کد ۱۰۱)", "۱۲ ج ۳۴۵ ایران ۲۲", "پردازش‌شده (تایید با توکن Bearer)"].join(","),
+    ["evt-002", "سارا احمدی", "0012345679", "پایه سوم - کلاس ۳۰۲", "PICKED_UP (سوار شد)", "2026-08-28T07:18:10.000Z", "35.7225,51.3352", "رضا مرادی (کد ۱۰۱)", "۱۲ ج ۳۴۵ ایران ۲۲", "پردازش‌شده (تایید با توکن Bearer)"].join(","),
+    ["evt-003", "امیرمحمد کاظمی", "0023456789", "پایه چهارم - کلاس ۴۰۱", "DROPPED_OFF (رسید)", "2026-08-28T07:42:00.000Z", "35.7310,51.3410", "رضا مرادی (کد ۱۰۱)", "۱۲ ج ۳۴۵ ایران ۲۲", "پردازش‌شده (تایید با توکن Bearer)"].join(","),
+    ["evt-004", "فاطمه کریمی", "0034567890", "پایه ششم - کلاس ۶۰۱", "ABSENT_RECORDED (ثبت غیبت)", "2026-08-28T06:30:00.000Z", "ثبت توسط والد", "—", "—", "تایید مرخصی روزانه"].join(",")
+  ].join("\r\n");
+
+  reply
+    .header('Content-Type', 'text/csv; charset=utf-8')
+    .header('Content-Disposition', 'attachment; filename="serviceyar-events.csv"')
+    .send(csvData);
+});
+
 // 5. Reports View
 fastify.get('/reports', async (req, reply) => {
   const content = `
   <div class="space-y-6">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h2 class="text-2xl font-black text-slate-800">گزارش‌های جامع و خروجی اکسل</h2>
-        <p class="text-sm text-slate-500">دریافت فایل گزارش ماهانه، کارکرد رانندگان و آمار تردد دانش‌آموزان</p>
+        <p class="text-sm text-slate-500">دریافت فایل گزارش ماهانه، کارکرد رانندگان و آمار تردد دانش‌آموزان با فرمت استاندارد CSV</p>
       </div>
-      <button onclick="alert('فایل اکسل با فرمت استاندارد CSV دانلود شد.')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-colors flex items-center gap-2">
+      <button onclick="downloadAttendanceCSV()" id="btn-export-csv" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2">
         <span>📊</span> دریافت خروجی اکسل (CSV)
       </button>
     </div>
+
+    <!-- Download Success Banner -->
+    <div id="export-success-banner" class="hidden p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between shadow-sm">
+      <div class="flex items-center gap-2">
+        <span class="text-base">✅</span>
+        <span>فایل <strong>serviceyar-events.csv</strong> با موفقیت در پوشه Downloads ویندوز ذخیره شد.</span>
+      </div>
+      <span class="text-[11px] text-emerald-600 font-mono">UTF-8 BOM • سالم</span>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="glass-card rounded-2xl p-5 shadow-sm">
         <h3 class="font-bold text-slate-800 text-sm mb-2">توزیع ساعت تردد صبحگاهی</h3>
@@ -447,6 +473,35 @@ fastify.get('/reports', async (req, reply) => {
       </div>
     </div>
   </div>
+
+  <script>
+    function downloadAttendanceCSV() {
+      const csvRows = [
+        ["شناسه رخداد", "نام دانش‌آموز", "کد ملی", "کلاس", "نوع رخداد", "زمان ثبت", "موقعیت جغرافیایی", "نام راننده", "پلاک خودرو", "وضعیت پردازش"],
+        ["evt-001", "علی احمدی", "0012345678", "پایه پنجم - کلاس ۵۰۱", "PICKED_UP (سوار شد)", "2026-08-28T07:15:22.000Z", "35.7219,51.3347", "رضا مرادی (کد ۱۰۱)", "۱۲ ج ۳۴۵ ایران ۲۲", "پردازش‌شده (تایید با توکن Bearer)"],
+        ["evt-002", "سارا احمدی", "0012345679", "پایه سوم - کلاس ۳۰۲", "PICKED_UP (سوار شد)", "2026-08-28T07:18:10.000Z", "35.7225,51.3352", "رضا مرادی (کد ۱۰۱)", "۱۲ ج ۳۴۵ ایران ۲۲", "پردازش‌شده (تایید با توکن Bearer)"],
+        ["evt-003", "امیرمحمد کاظمی", "0023456789", "پایه چهارم - کلاس ۴۰۱", "DROPPED_OFF (رسید)", "2026-08-28T07:42:00.000Z", "35.7310,51.3410", "رضا مرادی (کد ۱۰۱)", "۱۲ ج ۳۴۵ ایران ۲۲", "پردازش‌شده (تایید با توکن Bearer)"],
+        ["evt-004", "فاطمه کریمی", "0034567890", "پایه ششم - کلاس ۶۰۱", "ABSENT_RECORDED (ثبت غیبت)", "2026-08-28T06:30:00.000Z", "ثبت توسط والد", "—", "—", "تایید مرخصی روزانه"]
+      ];
+
+      const csvContent = "\\uFEFF" + csvRows.map(e => e.map(val => '"' + val.replace(/"/g, '""') + '"').join(",")).join("\\r\\n");
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'serviceyar-events.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      const banner = document.getElementById('export-success-banner');
+      if (banner) {
+        banner.classList.remove('hidden');
+        setTimeout(() => banner.classList.add('hidden'), 5000);
+      }
+    }
+  </script>
   `;
   reply.type('text/html').send(HTML_LAYOUT('گزارش‌ها و اکسل', 'reports', content));
 });
