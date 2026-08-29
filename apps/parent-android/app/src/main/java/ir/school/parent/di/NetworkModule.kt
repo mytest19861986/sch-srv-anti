@@ -35,6 +35,7 @@ class DynamicHostInterceptor(private val context: Context) : Interceptor {
                 .build()
             request = request.newBuilder().url(newUrl).build()
         }
+        android.util.Log.d("ServiceYar", "API Request: ${request.url}")
         return chain.proceed(request)
     }
 }
