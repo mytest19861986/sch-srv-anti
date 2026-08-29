@@ -340,25 +340,43 @@ fastify.get('/', async (req, reply) => {
       showLoginView();
     }
 
-    // 4. Fetch Driver Manifest from Real API
+    // 4. Fetch Driver Manifest from Real API with 10s Timeout
     async function fetchDriverManifest() {
       const token = localStorage.getItem('driver_token');
       if (!token) return showLoginView();
 
       const container = document.getElementById('students-list-container');
-      container.innerHTML = '<div class="text-center py-6 text-xs text-slate-400">در حال دریافت مانیفست از سرور...</div>';
+      container.innerHTML = \`
+        <div class="glass p-6 rounded-3xl text-center space-y-3 border border-amber-500/20 shadow-lg">
+          <div class="inline-block w-8 h-8 border-3 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-xs text-amber-300 font-medium">در حال دریافت مانیفست تردد از سرور...</p>
+        </div>
+      \`;
 
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
         const res = await fetch(API_BASE + '/attendance/manifest', {
           headers: {
             'Authorization': 'Bearer ' + token,
             'Content-Type': 'application/json'
-          }
+          },
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
         if (res.status === 401) {
           handleLogout();
           return;
+        }
+
+        if (res.status === 403) {
+          throw new Error('دسترسی به مانیفست برای این حساب راننده مجاز نیست.');
+        }
+
+        if (res.status === 404) {
+          throw new Error('شیفت یا مانیفست فعالی برای این راننده یافت نشد.');
         }
 
         const data = await res.json();
@@ -369,10 +387,12 @@ fastify.get('/', async (req, reply) => {
         currentManifest = data.manifest;
         renderManifest(data.manifest);
       } catch (err) {
-        const isNetworkErr = !err.message || err.message.toLowerCase().includes('fetch') || err.message.toLowerCase().includes('network') || err.message.toLowerCase().includes('failed');
-        const userMsg = isNetworkErr
-          ? 'اتصال به سرور برقرار نشد — بررسی کنید سرور روشن است'
-          : (err.message || 'خطا در بارگذاری مانیفست');
+        const isNetworkErr = err.name === 'AbortError' || !err.message || err.message.toLowerCase().includes('fetch') || err.message.toLowerCase().includes('network') || err.message.toLowerCase().includes('failed');
+        const userMsg = err.name === 'AbortError'
+          ? 'زمان پاسخ سرور به پایان رسید (Timeout) — لطفاً دوباره تلاش کنید.'
+          : (isNetworkErr
+              ? 'اتصال به سرور برقرار نشد — بررسی کنید سرور روشن است'
+              : (err.message || 'خطا در بارگذاری مانیفست'));
         container.innerHTML = \`
           <div class="glass p-5 rounded-3xl text-center space-y-3 border border-rose-500/30 shadow-lg">
             <p class="text-xs text-rose-300 font-bold">⚠️ \\\${userMsg}</p>

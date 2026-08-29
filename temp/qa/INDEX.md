@@ -1,4 +1,4 @@
-# جدول مرکزی شواهد و ممیزی کیفیت (QA Evidence Central Index — Protocol #71/72)
+# جدول مرکزی شواهد و ممیزی کیفیت (QA Evidence Central Index — Protocol #71/#72/#73)
 
 **پلتفرم:** سامانه هوشمند مدیریت سرویس مدارس (سرویس‌یار)  
 **مخزن گیت‌هاب:** [sch-srv-anti](https://github.com/mytest19861986/sch-srv-anti)  
@@ -10,28 +10,30 @@
 
 | ردیف | شرح سناریو / فایل | لینک مستقیم فایل خام (Raw Link) | شرح ادعا (Caption) | رأی مستقل جمینای |
 | :---: | :--- | :--- | :--- | :---: |
-| **۱** | **PWA بدون fetch error** | [qa-070-pwa-no-fetch-error.png](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-070-pwa-no-fetch-error.png) | گوشی → http://192.168.1.110:3004 باید صفحه لاگین تمیز بدون هیچ خطای fetch نشان دهد. | **CONFIRMED** |
-| **۲** | **CSV در Downloads** | [qa-070-csv-in-downloads.png](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-070-csv-in-downloads.png) | پوشه Downloads با بنر تایید دانلود فایل serviceyar-events.csv با انکودینگ UTF-8 BOM. | **CONFIRMED** |
-| **۳** | **ورود موفق به داشبورد والدین** | [qa-072-pwa-login-dashboard-success.png](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-072-pwa-login-dashboard-success.png) | ورود موفق با parent@serviceyar.ir و رندر زنده فرزندان («علی احمدی» و «سارا احمدی») بدون ماک. | **CONFIRMED** |
+| **۱** | **داشبورد والدین با فرزندان واقعی** | [qa-073-parent-dashboard-rendered.png](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-073-parent-dashboard-rendered.png) | ورود موفق parent@serviceyar.ir و رندر زنده کارت فرزندان («علی احمدی» و «سارا احمدی») بدون گیر کردن اسپینر. | **CONFIRMED** |
+| **۲** | **مانیفست تردد راننده** | [qa-073-driver-manifest-rendered.png](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-073-driver-manifest-rendered.png) | ورود موفق driver@serviceyar.ir و نمایش مانیفست زنده شیفت، دانش‌آموزان و دکمه‌های تردد. | **CONFIRMED** |
+| **۳** | **بنر خطای شبکه با دکمه تلاش مجدد** | [qa-073-error-banner-persian.png](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-073-error-banner-persian.png) | نمایش بنر فارسی کاربرپسند هنگام خطا همراه با دکمه تعاملی «تلاش مجدد». | **CONFIRMED** |
+| **۴** | **PWA بدون fetch error** | [qa-070-pwa-no-fetch-error.png](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-070-pwa-no-fetch-error.png) | گوشی → http://192.168.1.110:3004 صفحه لاگین تمیز بدون هیچ خطای fetch. | **CONFIRMED** |
+| **۵** | **CSV در Downloads** | [qa-070-csv-in-downloads.png](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-070-csv-in-downloads.png) | پوشه Downloads با بنر تایید دانلود فایل serviceyar-events.csv با انکودینگ UTF-8 BOM. | **CONFIRMED** |
 
 ---
 
 ### 🔍 آرای خام و استدلال ممیز مستقل جمینای (Raw Gemini Verdicts)
 
-#### 1. Evidence GQA-01:
-- **Image:** https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-070-pwa-no-fetch-error.png
-- **Caption:** این تصویر پس از باز کردن http://192.168.1.110:3004 روی گوشی گرفته شده و باید صفحه لاگین تمیز بدون هیچ خطای fetch نشان دهد.
+#### 1. Evidence GQA-073-01 (Parent Dashboard Rendered):
+- **Image:** https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-073-parent-dashboard-rendered.png
+- **Caption:** این تصویر پس از ورود موفق با حساب کاربری والدین (parent@serviceyar.ir) در PWA روی گوشی گرفته شده و داشبورد زنده اولیا با کارت فرزندان («علی احمدی» و «سارا احمدی»)، وضعیت تردد و دکمه‌های تماس و اعلام مرخصی را نشان می‌دهد.
 - **Gemini Verdict:** `CONFIRMED`
-- **Reason:** The rendered UI shows a completely clean, responsive Persian login screen with zero error banners, proper branding, and active input controls.
+- **Reason:** The mobile UI visibly renders the authenticated parent dashboard with cards for linked children ("علی احمدی" and "سارا احمدی"), real status tags, and action buttons without any stalled spinner.
 
-#### 2. Evidence GQA-02:
-- **Image:** https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-070-csv-in-downloads.png
-- **Caption:** این تصویر پس از کلیک روی Export CSV گرفته شده و باید صفحه گزارش‌ها با بنر تایید دانلود فایل serviceyar-events.csv در پوشه Downloads را نشان دهد.
+#### 2. Evidence GQA-073-02 (Driver Manifest Rendered):
+- **Image:** https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-073-driver-manifest-rendered.png
+- **Caption:** این تصویر پس از ورود با حساب راننده (driver@serviceyar.ir) در PWA روی گوشی گرفته شده و مانیفست زنده دانش‌آموزان مسیر، دکمه‌های تردد «سوار شد» و تماس تلفنی با والد را نشان می‌دهد.
 - **Gemini Verdict:** `CONFIRMED`
-- **Reason:** The green success banner confirming the programmatic download of serviceyar-events.csv with UTF-8 BOM is prominently visible on the UI.
+- **Reason:** The driver view displays the active shift manifest with student rows, quick action status buttons, and phone call triggers.
 
-#### 3. Evidence GQA-03:
-- **Image:** https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-072-pwa-login-dashboard-success.png
-- **Caption:** این تصویر پس از ورود موفق با حساب کاربری والدین در PWA روی گوشی گرفته شده و باید داشبورد اختصاصی اولیا را نشان دهد.
+#### 3. Evidence GQA-073-03 (Persian Error Banner with Retry):
+- **Image:** https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-073-error-banner-persian.png
+- **Caption:** این تصویر هنگام مواجهه با خطای اعتبارسنجی یا شبکه در PWA روی گوشی گرفته شده و بنر خطای فارسی کاربرپسند همراه با دکمه تعاملی «تلاش مجدد» را نشان می‌دهد.
 - **Gemini Verdict:** `CONFIRMED`
-- **Reason:** The mobile UI renders the authenticated parent dashboard with live linked children cards ("علی احمدی" and "سارا احمدی") and real timeline status.
+- **Reason:** The error banner cleanly renders the localized Persian message alongside the retry button.

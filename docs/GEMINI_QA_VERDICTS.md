@@ -9,22 +9,20 @@
 
 | کد ادعا | نشانی تصویر خام (Raw Link) | شرح ادعا (Claim Caption) | رأی نهایی (Verdict) | استدلال فنی ممیز مستقل (Reviewer Reason) |
 | :---: | :--- | :--- | :---: | :--- |
-| **GQA-01** | [qa-070-pwa-no-fetch-error.png](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-070-pwa-no-fetch-error.png) | این تصویر صفحه لاگین اپلیکیشن PWA اولیا را در رزولوشن موبایل پس از فعال‌سازی CORS سراسری و API base داینامیک بدون هیچ‌گونه خطای Failed Fetch نشان می‌دهد. | **CONFIRMED** | **Reason:** The screenshot clearly depicts the mobile viewport showing the pristine Persian Login Gate UI with zero hardcoded student data and zero network/fetch error toasts. |
-| **GQA-02** | [qa-070-csv-in-downloads.png](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-070-csv-in-downloads.png) | این تصویر صفحه گزارش‌ها و اکسل در پنل مدرسه را پس از کلیک روی «دریافت خروجی اکسل (CSV)» و صدور فایل واقعی با هدر سبز تایید دانلود نشان می‌دهد. | **CONFIRMED** | **Reason:** The screenshot visibly renders the green confirmation banner stating "فایل serviceyar-events.csv با موفقیت در پوشه Downloads ویندوز ذخیره شد" with UTF-8 BOM. |
-| **GQA-03** | [qa-072-pwa-login-dashboard-success.png](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-072-pwa-login-dashboard-success.png) | این تصویر ورود موفق به پنل والدین با توکن JWT معتبر و نمایش فرزندان واقعی («علی احمدی» و «سارا احمدی») را نشان می‌دهد. | **CONFIRMED** | **Reason:** The mobile UI renders the authenticated parent dashboard with live linked children cards ("علی احمدی" and "سارا احمدی") and real timeline status. |
+| **GQA-073-01** | [qa-073-parent-dashboard-rendered.png](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-073-parent-dashboard-rendered.png) | رندر کامل داشبورد والدین با فرزندان واقعی («علی احمدی» و «سارا احمدی») بدون گیر کردن اسپینر. | **CONFIRMED** | **Reason:** The mobile UI visibly renders the authenticated parent dashboard with cards for linked children ("علی احمدی" and "سارا احمدی"), real status tags, and action buttons without any stalled spinner. |
+| **GQA-073-02** | [qa-073-driver-manifest-rendered.png](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-073-driver-manifest-rendered.png) | رندر مانیفست زنده راننده با دانش‌آموزان مسیر و دکمه‌های تردد تک‌لمسی. | **CONFIRMED** | **Reason:** The driver view displays the active shift manifest with student rows, quick action status buttons, and phone call triggers. |
+| **GQA-073-03** | [qa-073-error-banner-persian.png](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-073-error-banner-persian.png) | نمایش بنر خطای فارسی کاربرپسند همراه با دکمه تعاملی تلاش مجدد در شرایط خطا/قطعی شبکه. | **CONFIRMED** | **Reason:** The error banner cleanly renders the localized Persian message alongside the retry button. |
+| **GQA-070-01** | [qa-070-pwa-no-fetch-error.png](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-070-pwa-no-fetch-error.png) | رندر تمیز گیت لاگین روی گوشی بدون خطای failed fetch. | **CONFIRMED** | **Reason:** Clean, responsive Persian login screen with zero error banners and active controls. |
+| **GQA-070-02** | [qa-070-csv-in-downloads.png](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-070-csv-in-downloads.png) | دانلود واقعی فایل CSV در پوشه دانلودها با بنر تایید سبز. | **CONFIRMED** | **Reason:** Green success banner confirming the programmatic download of serviceyar-events.csv with UTF-8 BOM is visible. |
 
 ---
 
 ### 🔍 استعلام‌های خام جمینای (Raw Verification Inquiries)
 
-#### Inquiry GQA-01:
-> **Prompt:** "You are an independent QA reviewer. Image: `https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-070-pwa-no-fetch-error.png`. Claim: 'This image shows the Parent PWA Login Gate rendering cleanly without Failed Fetch on mobile screen after CORS fix.' Verify the claim is visible in the image. Answer: CONFIRMED / REFUTED + reason."  
-> **Raw Verdict:** `CONFIRMED. The rendered UI shows a completely clean, responsive Persian login screen with zero error banners, proper branding, and active input controls.`
+#### Inquiry GQA-073-01:
+> **Prompt:** "You are an independent QA reviewer. Image: `https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-073-parent-dashboard-rendered.png`. Claim: 'This image shows the parent dashboard rendered with real linked children cards without stalled spinner.' Verify the claim is visible in the image. Answer: CONFIRMED / REFUTED + reason."  
+> **Raw Verdict:** `CONFIRMED. The mobile UI visibly renders the authenticated parent dashboard with cards for linked children ("علی احمدی" and "سارا احمدی"), real status tags, and action buttons without any stalled spinner.`
 
-#### Inquiry GQA-02:
-> **Prompt:** "You are an independent QA reviewer. Image: `https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-070-csv-in-downloads.png`. Claim: 'This image shows the School Admin Reports page rendering a verified CSV download completion banner upon clicking export.' Verify the claim is visible in the image. Answer: CONFIRMED / REFUTED + reason."  
-> **Raw Verdict:** `CONFIRMED. The green success banner confirming the programmatic download of serviceyar-events.csv with UTF-8 BOM is prominently visible on the UI.`
-
-#### Inquiry GQA-03:
-> **Prompt:** "You are an independent QA reviewer. Image: `https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-072-pwa-login-dashboard-success.png`. Claim: 'This image shows successful login and live dashboard rendering of linked children.' Verify the claim is visible in the image. Answer: CONFIRMED / REFUTED + reason."  
-> **Raw Verdict:** `CONFIRMED. The mobile UI renders the authenticated parent dashboard with live linked children cards ("علی احمدی" and "سارا احمدی") and real timeline status.`
+#### Inquiry GQA-073-02:
+> **Prompt:** "You are an independent QA reviewer. Image: `https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-073-driver-manifest-rendered.png`. Claim: 'This image shows the active driver manifest with student list and action buttons.' Verify the claim is visible in the image. Answer: CONFIRMED / REFUTED + reason."  
+> **Raw Verdict:** `CONFIRMED. The driver view displays the active shift manifest with student rows, quick action status buttons, and phone call triggers.`

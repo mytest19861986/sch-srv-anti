@@ -345,25 +345,43 @@ fastify.get('/', async (req, reply) => {
       showLoginView();
     }
 
-    // 4. Fetch Real Children from Parent API
+    // 4. Fetch Real Children from Parent API with Instant Render & 10s Timeout
     async function fetchParentChildren() {
       const token = localStorage.getItem('parent_token');
       if (!token) return showLoginView();
 
       const container = document.getElementById('children-container');
-      container.innerHTML = '<div class="text-center py-6 text-xs text-emerald-400">در حال دریافت داده‌های فرزندان از سرور...</div>';
+      container.innerHTML = \`
+        <div class="glass p-6 rounded-3xl text-center space-y-3 border border-emerald-500/20 shadow-lg">
+          <div class="inline-block w-8 h-8 border-3 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-xs text-emerald-300 font-medium">در حال بارگذاری اطلاعات فرزندان...</p>
+        </div>
+      \`;
 
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
         const res = await fetch(API_BASE + '/parent/children', {
           headers: {
             'Authorization': 'Bearer ' + token,
             'Content-Type': 'application/json'
-          }
+          },
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
         if (res.status === 401) {
           handleLogout();
           return;
+        }
+
+        if (res.status === 403) {
+          throw new Error('دسترسی به این بخش برای حساب شما مجاز نیست.');
+        }
+
+        if (res.status === 404) {
+          throw new Error('پروفایل والد در سامانه یافت نشد.');
         }
 
         const data = await res.json();
@@ -373,36 +391,53 @@ fastify.get('/', async (req, reply) => {
 
         parentChildren = data.children;
         if (parentChildren.length === 0) {
-          container.innerHTML = '<div class="glass p-4 rounded-2xl text-center text-xs text-slate-400">هیچ دانش‌آموزی متصل به حساب شما ثبت نشده است.</div>';
+          container.innerHTML = '<div class="glass p-6 rounded-3xl text-center text-xs text-slate-400 border border-emerald-950">هیچ دانش‌آموزی متصل به حساب شما ثبت نشده است.</div>';
           return;
         }
 
-        // For each child, fetch status and timeline
-        const fullChildrenData = await Promise.all(
+        // 1. Instantly render children with default status so the user NEVER waits on spinner
+        const initialChildren = parentChildren.map(c => ({ ...c, status: 'AT_HOME', timeline: [] }));
+        renderChildren(initialChildren);
+
+        // 2. Fetch live status & timeline in background without blocking
+        Promise.all(
           parentChildren.map(async (child) => {
             try {
+              const childCtrl = new AbortController();
+              const childTimeout = setTimeout(() => childCtrl.abort(), 5000);
+
               const [statusRes, timelineRes] = await Promise.all([
                 fetch(API_BASE + '/parent/children/' + child.id + '/status', {
-                  headers: { 'Authorization': 'Bearer ' + token }
-                }),
+                  headers: { 'Authorization': 'Bearer ' + token },
+                  signal: childCtrl.signal
+                }).catch(() => null),
                 fetch(API_BASE + '/parent/children/' + child.id + '/timeline', {
-                  headers: { 'Authorization': 'Bearer ' + token }
-                })
+                  headers: { 'Authorization': 'Bearer ' + token },
+                  signal: childCtrl.signal
+                }).catch(() => null)
               ]);
-              const statusData = statusRes.ok ? await statusRes.json() : {};
-              const timelineData = timelineRes.ok ? await timelineRes.json() : {};
+              clearTimeout(childTimeout);
+
+              const statusData = (statusRes && statusRes.ok) ? await statusRes.json().catch(() => ({})) : {};
+              const timelineData = (timelineRes && timelineRes.ok) ? await timelineRes.json().catch(() => ({})) : {};
               return { ...child, status: statusData.status || 'AT_HOME', timeline: timelineData.events || [] };
             } catch (e) {
               return { ...child, status: 'AT_HOME', timeline: [] };
             }
           })
-        );
+        ).then(updatedChildren => {
+          renderChildren(updatedChildren);
+        }).catch(err => {
+          console.warn('Background status sync error:', err);
+        });
 
       } catch (err) {
-        const isNetworkErr = !err.message || err.message.toLowerCase().includes('fetch') || err.message.toLowerCase().includes('network') || err.message.toLowerCase().includes('failed');
-        const userMsg = isNetworkErr
-          ? 'اتصال به سرور برقرار نشد — بررسی کنید سرور روشن است'
-          : (err.message || 'خطا در بارگذاری اطلاعات');
+        const isNetworkErr = err.name === 'AbortError' || !err.message || err.message.toLowerCase().includes('fetch') || err.message.toLowerCase().includes('network') || err.message.toLowerCase().includes('failed');
+        const userMsg = err.name === 'AbortError'
+          ? 'زمان پاسخ سرور به پایان رسید (Timeout) — لطفاً دوباره تلاش کنید.'
+          : (isNetworkErr
+              ? 'اتصال به سرور برقرار نشد — بررسی کنید سرور روشن است'
+              : (err.message || 'خطا در بارگذاری اطلاعات'));
         container.innerHTML = \`
           <div class="glass p-5 rounded-3xl text-center space-y-3 border border-rose-500/30 shadow-lg">
             <p class="text-xs text-rose-300 font-bold">⚠️ \\\${userMsg}</p>
