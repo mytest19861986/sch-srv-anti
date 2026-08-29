@@ -142,6 +142,7 @@ export class AuthService {
     const { passwordHash, ...userWithoutPassword } = user;
     return {
       access_token: token,
+      token: token,
       user: userWithoutPassword
     };
   }

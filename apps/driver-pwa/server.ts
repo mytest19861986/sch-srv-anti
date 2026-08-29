@@ -308,7 +308,8 @@ fastify.get('/', async (req, reply) => {
         }
 
         // Store Token & User Profile
-        localStorage.setItem('driver_token', data.token);
+        const jwtToken = data.access_token || data.token;
+        localStorage.setItem('driver_token', jwtToken);
         localStorage.setItem('driver_user', JSON.stringify(data.user));
 
         showDashboardView(data.user);

@@ -313,7 +313,8 @@ fastify.get('/', async (req, reply) => {
         }
 
         // Store Token & User Profile
-        localStorage.setItem('parent_token', data.token);
+        const jwtToken = data.access_token || data.token;
+        localStorage.setItem('parent_token', jwtToken);
         localStorage.setItem('parent_user', JSON.stringify(data.user));
 
         showDashboardView(data.user);
