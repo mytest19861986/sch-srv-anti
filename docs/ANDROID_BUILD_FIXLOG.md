@@ -11,6 +11,7 @@
 | **FIX-001** | 2026-08-29 | ارتقای تطابق با Android 14 و Gradle 8.6 | نیازمندی به استانداردهای مدرن | بررسی پرمیشن‌ها، exported flags و تنظیم سازگاری با Java 17 | ✅ **VERIFIED** |
 | **FIX-002** | 2026-08-29 | خطای Script compilation error در WorkManager | ارجاع با کاراکتر خط تیره | اصلاح سینتکس `libs.androidx.work.runtime.ktx` در `build.gradle.kts` | ✅ **VERIFIED** |
 | **FIX-003** | 2026-08-29 | AndroidX not enabled + OutOfMemoryError + Wrapper missing + namespace mismatch | gradle.properties نبود، تنظیمات در wrapper بودند، namespace≠پکیج | ایجاد gradle.properties، پاکسازی wrapper، تفکیک namespace/applicationId | ✅ **VERIFIED** |
+| **FIX-004** | 2026-08-29 | اتصال به سرور محلی در Pilot خانگی | هاردکد بودن آدرس و بلاک شدن HTTP | افزودن آدرس سرور قابل تنظیم + cleartext traffic + ApiClient داینامیک | ✅ **VERIFIED** |
 
 ---
 
