@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "ir.serviceyar.driver"
+    namespace = "ir.school.driver"
     compileSdk = 34
 
     defaultConfig {

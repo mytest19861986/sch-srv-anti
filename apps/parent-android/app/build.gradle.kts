@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "ir.serviceyar.parent"
+    namespace = "ir.school.parent"
     compileSdk = 34
 
     defaultConfig {

@@ -1,4 +1,4 @@
-package ir.serviceyar.parent.ui
+package ir.school.parent.ui
 
 import android.content.Context
 import android.content.SharedPreferences

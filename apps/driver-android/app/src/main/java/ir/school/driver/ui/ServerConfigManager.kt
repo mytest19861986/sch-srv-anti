@@ -1,4 +1,4 @@
-package ir.serviceyar.driver.ui
+package ir.school.driver.ui
 
 import android.content.Context
 import android.content.SharedPreferences

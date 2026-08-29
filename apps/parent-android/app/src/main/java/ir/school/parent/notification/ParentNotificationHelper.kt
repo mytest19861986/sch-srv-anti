@@ -1,4 +1,4 @@
-package ir.serviceyar.parent.notification
+package ir.school.parent.notification
 
 import android.content.Context
 
