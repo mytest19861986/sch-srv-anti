@@ -34,4 +34,10 @@ interface ParentApiService {
         @Header("Authorization") token: String,
         @Body request: DeviceRegisterRequest
     ): Response<DeviceRegisterResponse>
+
+    @POST("api/v1/parent/absence-report")
+    suspend fun reportAbsence(
+        @Header("Authorization") token: String,
+        @Body request: AbsenceReportRequestDto
+    ): Response<AbsenceReportResponseDto>
 }

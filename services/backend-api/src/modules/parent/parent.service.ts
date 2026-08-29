@@ -24,12 +24,19 @@ export class ParentService {
     return parent;
   }
 
-  async getChildren(tenantId: string, userId: string): Promise<{ success: boolean; children: Student[] }> {
+  async getChildren(tenantId: string, userId: string): Promise<{ success: boolean; children: any[] }> {
     const parent = await this.getParentByUserId(tenantId, userId);
     const children = await this.domainRepo.getChildrenForParent(tenantId, parent.id);
+    const mapped = children.map(c => ({
+      ...c,
+      child_id: c.id,
+      childId: c.id,
+      student_id: c.id,
+      studentId: c.id
+    }));
     return {
       success: true,
-      children
+      children: mapped
     };
   }
 
@@ -116,6 +123,15 @@ export class ParentService {
         total,
         total_pages: totalPages
       },
+      events: paginated.map(e => ({
+        eventId: e.id,
+        event_id: e.id,
+        eventType: e.eventType,
+        event_type: e.eventType,
+        timestamp: new Date(e.clientTimestamp).toISOString(),
+        title: e.eventType === 'PICKED_UP' ? 'سوار شدن به سرویس' : 'پیاده شدن از سرویس',
+        description: `ثبت رویداد ${e.eventType} در سرویس`
+      })),
       timeline: paginated.map(e => ({
         id: e.id,
         event_type: e.eventType,

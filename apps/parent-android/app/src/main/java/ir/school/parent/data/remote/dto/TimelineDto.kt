@@ -4,24 +4,14 @@ import com.google.gson.annotations.SerializedName
 
 data class TimelineResponseDto(
     @SerializedName("success") val success: Boolean,
-    @SerializedName("events") val events: List<TimelineItemDto>
+    @SerializedName(value = "events", alternate = ["timeline"]) val events: List<TimelineItemDto>? = null
 )
 
 data class TimelineItemDto(
-    @SerializedName("event_id") val eventId: String,
-    @SerializedName("event_type") val eventType: String,
-    @SerializedName("timestamp") val timestamp: String,
-    @SerializedName("title") val title: String,
-    @SerializedName("description") val description: String,
-    @SerializedName("driver_name") val driverName: String? = null
-)
-
-data class DeviceRegisterRequest(
-    @SerializedName("token") val token: String,
-    @SerializedName("platform") val platform: String = "ANDROID"
-)
-
-data class DeviceRegisterResponse(
-    @SerializedName("success") val success: Boolean,
-    @SerializedName("message") val message: String
+    @SerializedName(value = "eventId", alternate = ["event_id", "id"]) val eventId: String? = null,
+    @SerializedName(value = "eventType", alternate = ["event_type"]) val eventType: String? = null,
+    @SerializedName(value = "timestamp", alternate = ["client_timestamp", "server_timestamp"]) val timestamp: String? = null,
+    @SerializedName("title") val title: String? = null,
+    @SerializedName("description") val description: String? = null,
+    @SerializedName(value = "driverName", alternate = ["driver_name"]) val driverName: String? = null
 )

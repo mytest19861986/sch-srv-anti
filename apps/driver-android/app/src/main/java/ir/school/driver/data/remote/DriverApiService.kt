@@ -14,8 +14,14 @@ interface DriverApiService {
     @GET("api/v1/attendance/manifest")
     suspend fun getManifest(
         @Header("Authorization") token: String,
-        @Query("shift_id") shiftId: String
+        @Query("shift_id") shiftId: String? = null
     ): Response<ManifestResponseDto>
+
+    @POST("api/v1/attendance/events")
+    suspend fun recordAttendanceEvent(
+        @Header("Authorization") token: String,
+        @Body request: AttendanceEventRequestDto
+    ): Response<AttendanceEventResponseDto>
 
     @POST("api/v1/sync/batch")
     suspend fun syncBatch(

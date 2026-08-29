@@ -38,14 +38,26 @@ export async function seedDemoData(
     { email: "super-admin@platform.ir", role: "SUPER_ADMIN", tenantId: "system", password: "Demo@1234", name: "راهبر کل پلتفرم" },
     { email: "school-admin@demo.ir", role: "SCHOOL_ADMIN", tenantId: "tenant-school-mehr", password: "Demo@1234", name: "مدیر دبستان مهر آفرین" },
     { email: "driver@demo.ir", role: "DRIVER", tenantId: "tenant-school-mehr", password: "Demo@1234", name: "علی رضایی (راننده)" },
+    { email: "driver@serviceyar.ir", role: "DRIVER", tenantId: "tenant-school-mehr", password: "DriverPass@123", name: "مرتضی نوری (راننده سرویس)" },
     { email: "parent@demo.ir", role: "PARENT", tenantId: "tenant-school-mehr", password: "Demo@1234", name: "محمد تهرانی (ولی دانش‌آموز)" },
+    { email: "parent@serviceyar.ir", role: "PARENT", tenantId: "tenant-school-mehr", password: "ParentPass@123", name: "محمد احمدی (ولی دانش‌آموز)" },
   ];
 
   if (userRepo && authService) {
+    let driverCount = 0;
+    let parentCount = 0;
     for (const u of users) {
       const hash = await authService.hashPassword(u.password);
+      let userId = `usr-${u.role.toLowerCase()}-1`;
+      if (u.role === "DRIVER") {
+        driverCount++;
+        userId = `usr-driver-${driverCount}`;
+      } else if (u.role === "PARENT") {
+        parentCount++;
+        userId = `usr-parent-${parentCount}`;
+      }
       await userRepo.create({
-        id: `usr-${u.role.toLowerCase()}-1`,
+        id: userId,
         tenantId: u.tenantId,
         email: u.email,
         passwordHash: hash,
@@ -86,6 +98,13 @@ export async function seedDemoData(
       licenseNumber: "IR-987654",
     });
 
+    await domainRepo.createDriver({
+      id: "driver-2",
+      tenantId: "tenant-school-mehr",
+      userId: "usr-driver-2",
+      licenseNumber: "IR-987654",
+    });
+
     await domainRepo.createService({
       id: "srv-demo-1",
       tenantId: "tenant-school-mehr",
@@ -102,6 +121,7 @@ export async function seedDemoData(
     });
 
     await domainRepo.assignDriverToShift("tenant-school-mehr", "driver-1", "shift-demo-1");
+    await domainRepo.assignDriverToShift("tenant-school-mehr", "driver-2", "shift-demo-1");
 
     // Student & Parent
     await domainRepo.createStudent({
@@ -119,7 +139,15 @@ export async function seedDemoData(
       phoneNumber: "09121112233",
     });
 
+    await domainRepo.createParent({
+      id: "parent-2",
+      tenantId: "tenant-school-mehr",
+      userId: "usr-parent-2",
+      phoneNumber: "09121112233",
+    });
+
     await domainRepo.linkStudentParent("tenant-school-mehr", "student-1", "parent-1");
+    await domainRepo.linkStudentParent("tenant-school-mehr", "student-1", "parent-2");
     await domainRepo.assignStudentToRoute("tenant-school-mehr", "route-1", "student-1");
   }
 
