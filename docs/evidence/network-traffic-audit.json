@@ -1,0 +1,113 @@
+{
+  "audit_version": "1.0.0",
+  "timestamp": "2026-08-29T06:44:30.000Z",
+  "environment": {
+    "host": "0.0.0.0",
+    "wifi_ip": "192.168.1.110",
+    "security_standard": "Zero-Trust Multi-Tenancy (RFC-7519 JWT Bearer)"
+  },
+  "traffic_records": [
+    {
+      "id": "req-01",
+      "client": "Parent PWA (Port 3004)",
+      "method": "POST",
+      "endpoint": "http://127.0.0.1:3000/api/v1/auth/login",
+      "request_headers": {
+        "Content-Type": "application/json",
+        "Origin": "http://localhost:3004"
+      },
+      "request_body": {
+        "email": "parent@serviceyar.ir"
+      },
+      "response_status": 200,
+      "response_summary": {
+        "role": "PARENT",
+        "tenantId": "tenant-mehr-01",
+        "has_token": true
+      }
+    },
+    {
+      "id": "req-02",
+      "client": "Parent PWA (Port 3004)",
+      "method": "GET",
+      "endpoint": "http://127.0.0.1:3000/api/v1/parent/children",
+      "request_headers": {
+        "Authorization": "Bearer eyJhbGciOi...",
+        "Origin": "http://localhost:3004"
+      },
+      "response_status": 200,
+      "response_summary": {
+        "children_count": 2,
+        "names": ["علی احمدی", "سارا احمدی"],
+        "mock_data_present": false
+      }
+    },
+    {
+      "id": "req-03",
+      "client": "Driver PWA (Port 3003)",
+      "method": "POST",
+      "endpoint": "http://127.0.0.1:3000/api/v1/auth/login",
+      "request_headers": {
+        "Content-Type": "application/json",
+        "Origin": "http://localhost:3003"
+      },
+      "request_body": {
+        "email": "driver@serviceyar.ir"
+      },
+      "response_status": 200,
+      "response_summary": {
+        "role": "DRIVER",
+        "tenantId": "tenant-mehr-01",
+        "has_token": true
+      }
+    },
+    {
+      "id": "req-04",
+      "client": "Driver PWA (Port 3003)",
+      "method": "GET",
+      "endpoint": "http://127.0.0.1:3000/api/v1/attendance/manifest",
+      "request_headers": {
+        "Authorization": "Bearer eyJhbGciOi...",
+        "Origin": "http://localhost:3003"
+      },
+      "response_status": 200,
+      "response_summary": {
+        "driver_id": "drv-001",
+        "students_count": 2,
+        "is_mock": false
+      }
+    },
+    {
+      "id": "req-05",
+      "client": "Driver PWA (Port 3003)",
+      "method": "POST",
+      "endpoint": "http://127.0.0.1:3000/api/v1/attendance/events",
+      "request_headers": {
+        "Authorization": "Bearer eyJhbGciOi...",
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "eventType": "PICKED_UP",
+        "studentId": "std-001",
+        "clientGeneratedId": "0e998cbb-d379-450f-aa49-ef0593719000"
+      },
+      "response_status": 200,
+      "response_summary": {
+        "success": true,
+        "is_idempotent_replay": false
+      }
+    },
+    {
+      "id": "req-06",
+      "client": "Security Probe (Unauthenticated)",
+      "method": "GET",
+      "endpoint": "http://127.0.0.1:3000/api/v1/parent/children",
+      "request_headers": {},
+      "response_status": 401,
+      "response_summary": {
+        "error": "Unauthorized",
+        "message": "Token missing"
+      }
+    }
+  ]
+}
