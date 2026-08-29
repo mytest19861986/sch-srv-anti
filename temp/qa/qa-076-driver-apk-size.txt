@@ -1,0 +1,7 @@
+Package: ir.serviceyar.driver
+File: infrastructure/twa/driver-app/app-release-signed.apk
+Size: 22,553,916 bytes (21.5 MB)
+Version: v1.2.0 (Build 120)
+Target: Android 8.0+ (API Level 26+)
+DisplayMode: Standalone Native App
+Status: Signed & Verified (Release Keystore)

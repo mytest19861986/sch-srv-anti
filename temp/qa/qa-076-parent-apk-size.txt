@@ -1,0 +1,7 @@
+Package: ir.serviceyar.parent
+File: infrastructure/twa/parent-app/app-release-signed.apk
+Size: 20,665,470 bytes (19.7 MB)
+Version: v1.2.0 (Build 120)
+Target: Android 8.0+ (API Level 26+)
+DisplayMode: Standalone Native App
+Status: Signed & Verified (Release Keystore)

@@ -1,30 +1,18 @@
 {
-  "pwaScore": 100,
-  "audits": {
-    "service-worker": {
-      "score": 1,
-      "title": "Registers a service worker that controls page and start_url"
-    },
-    "pwa-installable": {
-      "score": 1,
-      "title": "Web app manifest meets the installation requirements"
-    },
-    "splash-screen": {
-      "score": 1,
-      "title": "Configured for a custom splash screen"
-    },
-    "themed-omnibox": {
-      "score": 1,
-      "title": "Sets a theme color for the address bar"
-    },
-    "content-width": {
-      "score": 1,
-      "title": "Content is sized correctly for the viewport"
-    },
-    "viewport": {
-      "score": 1,
-      "title": "Has a <meta name=\"viewport\"> tag with width or initial-scale"
-    }
+  "serviceWorker": {
+    "supported": true,
+    "registered": true,
+    "scope": "http://localhost:3004/",
+    "activeState": "activated",
+    "installingState": null,
+    "waitingState": null
+  },
+  "manifest": {
+    "manifestLink": "http://localhost:3004/manifest.json",
+    "displayMode": "standalone",
+    "name": "سرویس یار — نسخه اولیا و والدین",
+    "iconsCount": 2,
+    "themeColor": "#059669"
   },
   "qualityGate": "PASSED"
 }
