@@ -84,18 +84,18 @@ fastify.get('/sw.js', async (req, reply) => {
   `);
 });
 
-// Minimal PNG Icon Generator (192x192 & 512x512)
-const PNG_ICON_BUFFER = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAMAAAB/Pny7AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAZQTFRF////T09PSyYxRAAAAAJ0Uk5T/wCxCp5MAAAApElEQVR42uzBAQEAAACAkP6v7ggKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMA3wAAB9AAByH3yRwAAAABJRU5ErkJggg==',
-  'base64'
-);
+import fs from 'fs';
+import path from 'path';
+
+const PARENT_ICON_192 = fs.readFileSync(path.join(__dirname, 'public', 'icons', 'icon-192x192.png'));
+const PARENT_ICON_512 = fs.readFileSync(path.join(__dirname, 'public', 'icons', 'icon-512x512.png'));
 
 fastify.get('/icons/icon-192x192.png', async (req, reply) => {
-  reply.header('Content-Type', 'image/png').send(PNG_ICON_BUFFER);
+  reply.header('Content-Type', 'image/png').send(PARENT_ICON_192);
 });
 
 fastify.get('/icons/icon-512x512.png', async (req, reply) => {
-  reply.header('Content-Type', 'image/png').send(PNG_ICON_BUFFER);
+  reply.header('Content-Type', 'image/png').send(PARENT_ICON_512);
 });
 
 // Parent Main App Interface with Strict Auth Gate & Real API Binding
@@ -122,6 +122,41 @@ fastify.get('/', async (req, reply) => {
   </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col justify-between p-4 max-w-md mx-auto">
+
+  <!-- ==================== PWA INSTALL PROMPT BANNER ==================== -->
+  <div id="pwa-install-banner" class="mb-3 glass p-3 rounded-2xl border border-emerald-500/40 flex items-center justify-between shadow-xl">
+    <div class="flex items-center gap-2.5">
+      <span class="text-xl">📲</span>
+      <div>
+        <p class="text-xs font-bold text-white">نصب اپلیکیشن روی گوشی</p>
+        <p class="text-[10px] text-emerald-300/80">دسترسی سریع و اعلان‌های زنده</p>
+      </div>
+    </div>
+    <button id="btn-pwa-install" onclick="triggerPwaInstall()" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black shadow-md transition-all active:scale-95">
+      نصب اپ
+    </button>
+  </div>
+
+  <!-- ==================== PWA INSTALLATION GUIDE MODAL ==================== -->
+  <div id="modal-pwa-guide" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass p-6 rounded-3xl max-w-sm w-full space-y-4 border border-emerald-500/40 shadow-2xl">
+      <div class="text-center space-y-2">
+        <span class="text-3xl">📲</span>
+        <h3 class="text-base font-black text-white">راهنمای نصب نسخه موبایل</h3>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          برای نصب مستقیم اپلیکیشن سرویس‌یار روی صفحه اصلی گوشی خود:
+        </p>
+      </div>
+      <div class="bg-slate-900/80 p-3.5 rounded-2xl space-y-2 border border-emerald-900/40 text-xs text-emerald-200">
+        <p>۱. روی منوی <strong>۳ نقطه (⋮)</strong> در بالای مرورگر کروم ضربه بزنید.</p>
+        <p>۲. گزینه <strong>«افزودن به صفحه اصلی (Add to Home screen)»</strong> یا <strong>«نصب برنامه»</strong> را انتخاب کنید.</p>
+        <p>۳. دکمه <strong>Install / افزودن</strong> را تایید نمایید.</p>
+      </div>
+      <button onclick="closePwaGuide()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all">
+        متوجه شدم
+      </button>
+    </div>
+  </div>
 
   <!-- ==================== VIEW 1: AUTH GATE (LOGIN SCREEN) ==================== -->
   <div id="view-login" class="flex-1 flex flex-col justify-center space-y-6 my-auto">
@@ -578,6 +613,8 @@ fastify.get('/', async (req, reply) => {
     }
 
     // 7. PWA Lifecycle & Installation Handlers
+    let deferredPrompt = null;
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
@@ -586,7 +623,6 @@ fastify.get('/', async (req, reply) => {
       });
     }
 
-    let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
@@ -594,17 +630,20 @@ fastify.get('/', async (req, reply) => {
       if (banner) banner.classList.remove('hidden');
     });
 
-    const installBtn = document.getElementById('btn-pwa-install');
-    if (installBtn) {
-      installBtn.addEventListener('click', async () => {
-        if (deferredPrompt) {
-          deferredPrompt.prompt();
-          const { outcome } = await deferredPrompt.userChoice;
-          console.log('User response to install prompt:', outcome);
-          deferredPrompt = null;
-          document.getElementById('pwa-install-banner').classList.add('hidden');
-        }
-      });
+    async function triggerPwaInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log('User response to install prompt:', outcome);
+        deferredPrompt = null;
+        document.getElementById('pwa-install-banner').classList.add('hidden');
+      } else {
+        document.getElementById('modal-pwa-guide').classList.remove('hidden');
+      }
+    }
+
+    function closePwaGuide() {
+      document.getElementById('modal-pwa-guide').classList.add('hidden');
     }
 
     // Run Auth Gate on startup
