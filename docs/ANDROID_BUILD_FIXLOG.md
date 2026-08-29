@@ -7,8 +7,9 @@
 ### 📋 جدول تاریخچه اصلاحات (Fix History)
 
 | شناسه ردیف | تاریخ / ساعت | پروژه مقصد | شرح خطا | اقدام اصلاحی انجام شده | وضعیت نهایی |
-| :---: | :---: | :---: | :--- | :--- | :---: |
+| :---: | :--- : | :---: | :--- | :--- | :---: |
 | **FIX-001** | ۱۴۰۵/۰۶/۰۷ | `driver-android` & `parent-android` | ارتقای تطابق با Android 14 و Gradle 8.6 | بررسی پرمیشن‌ها، exported flags و تنظیم سازگاری با Java 17 | ✅ **VERIFIED** |
+| **FIX-002** | ۱۴۰۵/۰۶/۰۷ | `driver-android` & `parent-android` | خطای Script compilation error در ارجاع WorkManager | اصلاح سینتکس `libs.androidx.work.runtime.ktx` در `build.gradle.kts` | ✅ **VERIFIED** |
 
 ---
 

@@ -87,7 +87,7 @@ dependencies {
     implementation(libs.okhttp.logging)
 
     // WorkManager
-    implementation(libs.androidx.work.runtime-ktx)
+    implementation(libs.androidx.work.runtime.ktx)
 
     // Security Crypto
     implementation(libs.androidx.security.crypto)
