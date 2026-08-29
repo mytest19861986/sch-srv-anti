@@ -27,3 +27,7 @@ Thumbs.db
 .agents/
 
 .github/
+
+tools/
+*.zip
+

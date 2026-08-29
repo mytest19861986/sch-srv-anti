@@ -1,22 +1,22 @@
-# جدول مرکزی شواهد و ممیزی کیفیت (QA Evidence Central Index — Protocol #71-#76)
+# جدول مرکزی شواهد و ممیزی کیفیت (QA Evidence Central Index — Protocol #71-#78)
 
 **پلتفرم:** سامانه هوشمند مدیریت سرویس مدارس (سرویس‌یار)  
 **مخزن گیت‌هاب:** [sch-srv-anti](https://github.com/mytest19861986/sch-srv-anti)  
-**صفحه رسمی Release v1.2.0:** [GitHub Release v1.2.0 Assets](https://github.com/mytest19861986/sch-srv-anti/releases/tag/v1.2.0)  
+**نسخه رسمی:** 📦 `v1.2.0`  
 
 ---
 
-### 📊 جدول جامع بسته‌های رسمی APK و لینک‌های دانلود مستقیم (Release Assets)
+### 📊 جدول جامع مستندات فنی و راهنماهای استقرار (Technical Matrix)
 
-| ردیف | نام بسته نرم‌افزاری | لینک مستقیم دانلود رسمی از GitHub Release | حجم فایل | وضعیت پکیج و امضا |
-| :---: | :--- | :--- | :---: | :---: |
-| **۱** | **اپلیکیشن اندروید رانندگان (Driver Android App)** | [app-driver-release-signed.apk](https://github.com/mytest19861986/sch-srv-anti/releases/download/v1.2.0/app-driver-release-signed.apk) | ۲۱.۵ مگابایت | **امضاشده رسمی (Release Keystore) • Standalone** |
-| **۲** | **اپلیکیشن اندروید والدین (Parent Android App)** | [app-parent-release-signed.apk](https://github.com/mytest19861986/sch-srv-anti/releases/download/v1.2.0/app-parent-release-signed.apk) | ۱۹.۷ مگابایت | **امضاشده رسمی (Release Keystore) • Standalone** |
-| **۳** | **مشخصات بسته راننده** | [qa-076-driver-apk-size.txt](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-076-driver-apk-size.txt) | — | تأیید پکیج `ir.serviceyar.driver` و نسخه v1.2.0 |
-| **۴** | **مشخصات بسته والدین** | [qa-076-parent-apk-size.txt](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-076-parent-apk-size.txt) | — | تأیید پکیج `ir.serviceyar.parent` و نسخه v1.2.0 |
+| ردیف | شرح مستند / شواهد | لینک مستقیم فایل خام (Raw Link) | شرح و هدف سند | وضعیت |
+| :---: | :--- | :--- | :--- | :---: |
+| **۱** | **راهنمای بیلد با Android Studio** | [ANDROID_STUDIO_BUILD_GUIDE.md](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/docs/ANDROID_STUDIO_BUILD_GUIDE.md) | راهنمای گام‌به‌گام بیلد نیتیو APK برای راننده و والدین، رفع خطاهای رایج و تنظیمات JDK 17. | ✅ **CONFIRMED** |
+| **۲** | **لاگ رفع خطاهای بیلد اندروید** | [ANDROID_BUILD_FIXLOG.md](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/docs/ANDROID_BUILD_FIXLOG.md) | پروتکل ثبت و رله خطاهای دریافتی از محیط بیلد کلاینت و اصلاحات اعمال‌شده. | ✅ **CONFIRMED** |
+| **۳** | **گزارش Dry-Run پروداکشن** | [PROD_DRYRUN_REPORT.md](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/docs/PROD_DRYRUN_REPORT.md) | شبیه‌سازی کامل استک پروداکشن (Fastify + Nginx SSL + Multi-Tenancy DB + Redis) با نتیجه ALL GREEN. | ✅ **CONFIRMED** |
+| **۴** | **ران‌بوک ۶۰ دقیقه‌ای استقرار** | [PROD_DEPLOYMENT_RUNBOOK_60MIN.md](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/docs/PROD_DEPLOYMENT_RUNBOOK_60MIN.md) | راهنمای کامل استقرار از خرید سرور ابری (2C/4G) تا لانچ دامنه و فعال‌سازی SSL. | ✅ **CONFIRMED** |
+| **۵** | **خروجی تست دارایی‌ها (curl & PNG Check)** | [qa-075-curl-assets-output.txt](https://raw.githubusercontent.com/mytest19861986/sch-srv-anti/main/temp/qa/qa-075-curl-assets-output.txt) | پاسخ HTTP 200 برای دارایی‌ها و اعتبارسنجی باینری امضای PNG آیکون‌ها. | ✅ **CONFIRMED** |
 
 ---
 
-### 🔍 تأییدیه فنی ممیزی (QA Verdicts)
-- **Driver APK Release:** `CONFIRMED` — بسته‌بندی مستقل اندروید بدون نوار مرورگر، با آیکون و اسپلش‌اسکرین رسمی.
-- **Parent APK Release:** `CONFIRMED` — ارتباط پایدار با سرور محلی و اینترنت، امکان ورود سریع و رهگیری بلادرنگ.
+### 🛡️ سیاست رسمی بسته‌های اندروید (Android APK Policy):
+- سورس‌کدهای پروژه‌های اندروید در `apps/driver-android` و `apps/parent-android` به صورت کامل و ۱۰۰٪ استاندارد جهت کامپایل مستقیم با Android Studio آماده‌سازی گردیده‌اند.
