@@ -81,16 +81,33 @@ class AttendanceRepositoryImpl @Inject constructor(
     override suspend fun login(email: String, password: String): Result<Unit> {
         return try {
             val response = api.login(LoginRequest(email, password))
-            if (response.isSuccessful && response.body() != null) {
-                val body = response.body()!!
-                prefs.saveToken(body.accessToken)
-                prefs.saveTenantId(body.user.tenantId)
-                Result.success(Unit)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null) {
+                    try {
+                        val token = body.accessToken ?: ""
+                        val tenantId = body.tenantId ?: body.user?.tenantId ?: ""
+                        prefs.saveToken(token)
+                        prefs.saveTenantId(tenantId)
+                        Result.success(Unit)
+                    } catch (pe: Exception) {
+                        Result.failure(Exception("خطا در پردازش پاسخ سرور: ${pe.message}"))
+                    }
+                } else {
+                    Result.failure(Exception("خطا در پردازش پاسخ سرور (پاسخ خالی)"))
+                }
             } else {
-                Result.failure(Exception("INVALID_CREDENTIALS"))
+                val errCode = response.code()
+                if (errCode == 401 || errCode == 400) {
+                    Result.failure(Exception("INVALID_CREDENTIALS"))
+                } else {
+                    Result.failure(Exception("HTTP $errCode: ${response.message()}"))
+                }
             }
+        } catch (e: java.io.IOException) {
+            Result.failure(Exception("خطا در برقراری ارتباط با سرور: ${e.message}"))
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("خطای غیرمنتظره: ${e.message}"))
         }
     }
 

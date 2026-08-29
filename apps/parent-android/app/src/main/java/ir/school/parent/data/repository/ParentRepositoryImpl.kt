@@ -22,19 +22,36 @@ class ParentRepositoryImpl @Inject constructor(
     override suspend fun login(email: String, password: String): Result<Unit> {
         return try {
             val response = api.login(ParentLoginRequest(email, password))
-            if (response.isSuccessful && response.body() != null) {
-                val body = response.body()!!
-                prefs.saveToken(body.accessToken)
-                prefs.saveTenantId(body.user.tenantId)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null) {
+                    try {
+                        val token = body.accessToken ?: ""
+                        val tenantId = body.tenantId ?: body.user?.tenantId ?: ""
+                        prefs.saveToken(token)
+                        prefs.saveTenantId(tenantId)
 
-                // Trigger token sync if FCM token was already generated
-                tokenManager.syncPendingTokenIfNeeded()
-                Result.success(Unit)
+                        // Trigger token sync if FCM token was already generated
+                        tokenManager.syncPendingTokenIfNeeded()
+                        Result.success(Unit)
+                    } catch (pe: Exception) {
+                        Result.failure(Exception("خطا در پردازش پاسخ سرور: ${pe.message}"))
+                    }
+                } else {
+                    Result.failure(Exception("خطا در پردازش پاسخ سرور (پاسخ خالی)"))
+                }
             } else {
-                Result.failure(Exception("INVALID_CREDENTIALS"))
+                val errCode = response.code()
+                if (errCode == 401 || errCode == 400) {
+                    Result.failure(Exception("INVALID_CREDENTIALS"))
+                } else {
+                    Result.failure(Exception("HTTP $errCode: ${response.message()}"))
+                }
             }
+        } catch (e: java.io.IOException) {
+            Result.failure(Exception("خطا در برقراری ارتباط با سرور: ${e.message}"))
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("خطای غیرمنتظره: ${e.message}"))
         }
     }
 
@@ -63,29 +80,28 @@ class ParentRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getChildStatus(childId: String): Result<ChildLiveStatus> {
+    override suspend fun getChildLiveStatus(childId: String): Result<ChildLiveStatus> {
         val token = prefs.getToken() ?: return Result.failure(IllegalStateException("UNAUTHENTICATED"))
         return try {
-            val response = api.getChildStatus("Bearer $token", childId)
+            val response = api.getChildLiveStatus("Bearer $token", childId)
             if (response.isSuccessful && response.body() != null) {
-                val s = response.body()!!.status
-                val stateEnum = when (s.state.uppercase()) {
-                    "IN_SCHOOL" -> ChildState.IN_SCHOOL
-                    "PICKED_UP" -> ChildState.PICKED_UP
-                    "DROPPED_OFF" -> ChildState.DROPPED_OFF
-                    "ABSENT" -> ChildState.ABSENT
-                    else -> ChildState.UNKNOWN
-                }
-                Result.success(
-                    ChildLiveStatus(
-                        childId = s.childId,
-                        state = stateEnum,
-                        lastUpdated = s.lastUpdated,
-                        driverName = s.driverName,
-                        serviceName = s.serviceName,
-                        etaMinutes = s.etaMinutes
-                    )
+                val body = response.body()!!
+                val status = ChildLiveStatus(
+                    childId = body.childId,
+                    studentName = body.studentName,
+                    state = when (body.status.uppercase()) {
+                        "BOARDED" -> ChildState.BOARDED
+                        "ALIGHTED" -> ChildState.ALIGHTED
+                        "ABSENT" -> ChildState.ABSENT
+                        else -> ChildState.PENDING
+                    },
+                    driverLatitude = body.driverLat,
+                    driverLongitude = body.driverLng,
+                    lastEventTime = body.lastEventTime,
+                    serviceName = body.serviceName,
+                    driverName = body.driverName
                 )
+                Result.success(status)
             } else {
                 Result.failure(Exception("HTTP ${response.code()}"))
             }
@@ -94,19 +110,18 @@ class ParentRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getChildTimeline(childId: String, date: String?): Result<List<TimelineEvent>> {
+    override suspend fun getTimeline(childId: String): Result<List<TimelineEvent>> {
         val token = prefs.getToken() ?: return Result.failure(IllegalStateException("UNAUTHENTICATED"))
         return try {
-            val response = api.getChildTimeline("Bearer $token", childId, date)
+            val response = api.getTimeline("Bearer $token", childId)
             if (response.isSuccessful && response.body() != null) {
                 val events = response.body()!!.events.map {
                     TimelineEvent(
                         eventId = it.eventId,
+                        childId = it.childId,
                         eventType = it.eventType,
                         timestamp = it.timestamp,
-                        title = it.title,
-                        description = it.description,
-                        driverName = it.driverName
+                        description = it.description
                     )
                 }
                 Result.success(events)

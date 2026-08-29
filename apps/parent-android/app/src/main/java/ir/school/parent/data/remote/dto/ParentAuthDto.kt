@@ -8,16 +8,15 @@ data class ParentLoginRequest(
 )
 
 data class ParentLoginResponse(
-    @SerializedName("success") val success: Boolean,
-    @SerializedName("access_token") val accessToken: String,
-    @SerializedName("expires_in") val expiresIn: Long,
-    @SerializedName("user") val user: ParentUserDto
+    @SerializedName(value = "accessToken", alternate = ["access_token", "token"]) val accessToken: String? = null,
+    @SerializedName(value = "tenantId", alternate = ["tenant_id"]) val tenantId: String? = null,
+    @SerializedName("user") val user: ParentUserDto? = null
 )
 
 data class ParentUserDto(
-    @SerializedName("id") val id: String,
-    @SerializedName("email") val email: String,
-    @SerializedName("full_name") val fullName: String,
-    @SerializedName("role") val role: String,
-    @SerializedName("tenant_id") val tenantId: String
+    @SerializedName("id") val id: String? = null,
+    @SerializedName("email") val email: String? = null,
+    @SerializedName(value = "fullName", alternate = ["full_name"]) val fullName: String? = null,
+    @SerializedName("role") val role: String? = null,
+    @SerializedName(value = "tenantId", alternate = ["tenant_id"]) val tenantId: String? = null
 )

@@ -143,7 +143,13 @@ export class AuthService {
     return {
       access_token: token,
       token: token,
-      user: userWithoutPassword
+      tenant_id: user.tenantId,
+      tenantId: user.tenantId,
+      user: {
+        ...userWithoutPassword,
+        tenantId: user.tenantId,
+        tenant_id: user.tenantId
+      }
     };
   }
 
