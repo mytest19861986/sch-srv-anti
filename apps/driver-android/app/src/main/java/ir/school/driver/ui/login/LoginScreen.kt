@@ -259,7 +259,7 @@ fun LoginScreen(
                     modifier = Modifier.padding(horizontal = 8.dp)
                 ) {
                     Text(
-                        text = "نسخه آزمایشی: FIX-008",
+                        text = "نسخه آزمایشی: FIX-011",
                         color = Color(0xFF94A3B8),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,

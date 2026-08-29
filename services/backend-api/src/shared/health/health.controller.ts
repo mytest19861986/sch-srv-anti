@@ -8,6 +8,7 @@ export function healthController(queueService: IOutboxQueueService) {
     fastify.get('/live', async (request: FastifyRequest, reply: FastifyReply) => {
       return reply.status(200).send({
         status: 'UP',
+        build: 'FIX-011',
         uptime_seconds: process.uptime(),
         timestamp: new Date().toISOString()
       });
