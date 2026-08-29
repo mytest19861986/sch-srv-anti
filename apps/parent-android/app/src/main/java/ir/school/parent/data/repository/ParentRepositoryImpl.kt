@@ -73,10 +73,12 @@ class ParentRepositoryImpl @Inject constructor(
                 }
                 Result.success(list)
             } else {
-                Result.failure(Exception("HTTP ${response.code()}"))
+                val code = response.code()
+                val errorDetails = response.errorBody()?.string() ?: response.message()
+                Result.failure(Exception("خطای HTTP $code در دریافت اطلاعات فرزندان:\nمسیر: api/v1/parent/children\nعلت: $errorDetails"))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("خطا در برقراری ارتباط با لیست فرزندان:\n${e.javaClass.simpleName}: ${e.message}"))
         }
     }
 
@@ -90,8 +92,8 @@ class ParentRepositoryImpl @Inject constructor(
                     childId = body.childId,
                     studentName = body.studentName,
                     state = when (body.status.uppercase()) {
-                        "BOARDED" -> ChildState.BOARDED
-                        "ALIGHTED" -> ChildState.ALIGHTED
+                        "BOARDED", "PICKED_UP", "IN_TRANSIT" -> ChildState.BOARDED
+                        "ALIGHTED", "DROPPED_OFF", "AT_SCHOOL" -> ChildState.ALIGHTED
                         "ABSENT" -> ChildState.ABSENT
                         else -> ChildState.PENDING
                     },
@@ -103,10 +105,12 @@ class ParentRepositoryImpl @Inject constructor(
                 )
                 Result.success(status)
             } else {
-                Result.failure(Exception("HTTP ${response.code()}"))
+                val code = response.code()
+                val errorDetails = response.errorBody()?.string() ?: response.message()
+                Result.failure(Exception("خطای HTTP $code در رهگیری وضعیت فرزند:\nمسیر: api/v1/parent/children/$childId/status\nعلت: $errorDetails"))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("خطا در برقراری ارتباط با سرور وضعیت:\n${e.javaClass.simpleName}: ${e.message}"))
         }
     }
 
@@ -115,21 +119,24 @@ class ParentRepositoryImpl @Inject constructor(
         return try {
             val response = api.getTimeline("Bearer $token", childId)
             if (response.isSuccessful && response.body() != null) {
-                val events = response.body()!!.events.map {
+                val rawEvents = response.body()!!.events ?: emptyList()
+                val events = rawEvents.map {
                     TimelineEvent(
-                        eventId = it.eventId,
-                        childId = it.childId,
-                        eventType = it.eventType,
-                        timestamp = it.timestamp,
-                        description = it.description
+                        eventId = it.eventId ?: "",
+                        childId = childId,
+                        eventType = it.eventType ?: "",
+                        timestamp = it.timestamp ?: "",
+                        description = it.description ?: ""
                     )
                 }
                 Result.success(events)
             } else {
-                Result.failure(Exception("HTTP ${response.code()}"))
+                val code = response.code()
+                val errorDetails = response.errorBody()?.string() ?: response.message()
+                Result.failure(Exception("خطای HTTP $code در دریافت تایملاین:\nمسیر: api/v1/parent/children/$childId/timeline\nعلت: $errorDetails"))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("خطا در برقراری ارتباط با سرور تایملاین:\n${e.javaClass.simpleName}: ${e.message}"))
         }
     }
 

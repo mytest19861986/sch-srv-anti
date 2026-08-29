@@ -59,7 +59,7 @@ class ManifestViewModel @Inject constructor(
         ManifestUiState.Success(manifest.copy(students = mergedStudents))
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ManifestUiState.Loading)
 
-    fun loadManifest(shiftId: String = "shift-active-1") {
+    fun loadManifest(shiftId: String? = null) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null

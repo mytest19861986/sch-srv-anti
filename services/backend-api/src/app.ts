@@ -23,6 +23,9 @@ import { healthController } from './shared/health/health.controller.js';
 import { QueueMonitorService } from './shared/observability/queue-monitor.service.js';
 
 import cors from '@fastify/cors';
+import fs from 'fs';
+import path from 'path';
+import { FastifyRequest, FastifyReply } from 'fastify';
 
 export interface AppOptions {
   attendanceRepository?: IAttendanceRepository;
@@ -72,6 +75,43 @@ export function buildApp(opts: AppOptions = {}): {
 
   // 1. Tracing & Request Observability Hook
   registerTracingMiddleware(app);
+
+  // 2. Request Logger & 404 Catcher to Console and temp/qa/request-log.txt (FIX-012)
+  const logDir = path.resolve(process.cwd(), 'temp/qa');
+  try {
+    fs.mkdirSync(logDir, { recursive: true });
+  } catch {}
+  const logFilePath = path.join(logDir, 'request-log.txt');
+
+  app.addHook('onRequest', async (request: FastifyRequest) => {
+    (request as any)._reqStartTime = performance.now();
+  });
+
+  app.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply) => {
+    const start = (request as any)._reqStartTime;
+    const duration = (start ? performance.now() - start : 0).toFixed(2);
+    const ip = request.ip || request.socket.remoteAddress || 'unknown';
+    const logLine = `[REQ] ${ip} ${request.method} ${request.url} -> ${reply.statusCode} (${duration}ms)\n`;
+    console.log(logLine.trim());
+    try {
+      fs.appendFileSync(logFilePath, logLine, 'utf8');
+    } catch {}
+  });
+
+  app.setNotFoundHandler(async (request: FastifyRequest, reply: FastifyReply) => {
+    const ip = request.ip || request.socket.remoteAddress || 'unknown';
+    const logLine = `[404-MISS] ${ip} ${request.method} ${request.url}\n`;
+    console.warn(logLine.trim());
+    try {
+      fs.appendFileSync(logFilePath, logLine, 'utf8');
+    } catch {}
+    return reply.status(404).send({
+      success: false,
+      error: 'NOT_FOUND',
+      message: `Route ${request.method} ${request.url} not found`,
+      path: request.url
+    });
+  });
 
   const domainRepository = opts.domainRepository ?? new InMemoryDomainRepository();
   const auditService = opts.auditService ?? new AuditService();

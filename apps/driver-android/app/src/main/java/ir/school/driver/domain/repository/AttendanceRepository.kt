@@ -14,7 +14,7 @@ interface AttendanceRepository {
 
     fun getLocalEventsFlow(): Flow<List<LocalAttendanceEvent>>
 
-    suspend fun fetchManifest(shiftId: String): Result<DriverManifest>
+    suspend fun fetchManifest(shiftId: String? = null): Result<DriverManifest>
 
     suspend fun login(email: String, password: String): Result<Unit>
 

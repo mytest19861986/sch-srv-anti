@@ -46,10 +46,10 @@ class AttendanceRepositoryImpl @Inject constructor(
         return dao.getAllEventsFlow()
     }
 
-    override suspend fun fetchManifest(shiftId: String): Result<DriverManifest> {
+    override suspend fun fetchManifest(shiftId: String?): Result<DriverManifest> {
         val token = prefs.getToken() ?: return Result.failure(IllegalStateException("UNAUTHENTICATED"))
         return try {
-            val response = api.getManifest("Bearer $token", shiftId)
+            val response = api.getManifest("Bearer $token", if (shiftId.isNullOrBlank()) null else shiftId)
             if (response.isSuccessful && response.body() != null) {
                 val body = response.body()!!.manifest
                 val manifest = DriverManifest(
@@ -71,10 +71,12 @@ class AttendanceRepositoryImpl @Inject constructor(
                 )
                 Result.success(manifest)
             } else {
-                Result.failure(Exception("HTTP ${response.code()}: ${response.message()}"))
+                val code = response.code()
+                val errorDetails = response.errorBody()?.string() ?: response.message()
+                Result.failure(Exception("خطای HTTP $code در دریافت مانیفست:\nمسیر: api/v1/attendance/manifest\nعلت: $errorDetails"))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("خطا در برقراری ارتباط با مانیفست:\n${e.javaClass.simpleName}: ${e.message}"))
         }
     }
 

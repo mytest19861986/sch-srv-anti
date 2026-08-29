@@ -18,7 +18,10 @@ object ServerConfig {
     }
 
     fun setBaseUrl(context: Context, url: String) {
-        var cleanUrl = url.trim()
+        var cleanUrl = url.trim().trimEnd('/')
+        if (cleanUrl.endsWith("/api/v1")) {
+            cleanUrl = cleanUrl.removeSuffix("/api/v1").trimEnd('/')
+        }
         if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://")) {
             cleanUrl = "http://$cleanUrl"
         }

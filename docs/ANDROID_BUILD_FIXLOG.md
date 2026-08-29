@@ -11,7 +11,7 @@
 ### 📋 جدول تاریخچه اصلاحات (Fix History)
 
 | شناسه ردیف | تاریخ | خطا | علت | رفع | وضعیت نهایی |
-| :---: | :---: | :--- | :--- | :--- | :---: |
+| :---: | :---: | :--- | :--- | :--- | :--- | :---: |
 | **FIX-001** | 2026-08-29 | ارتقای تطابق با Android 14 و Gradle 8.6 | نیازمندی به استانداردهای مدرن | بررسی پرمیشن‌ها، exported flags و تنظیم سازگاری با Java 17 | ✅ **VERIFIED** |
 | **FIX-002** | 2026-08-29 | خطای Script compilation error در WorkManager | ارجاع با کاراکتر خط تیره | اصلاح سینتکس `libs.androidx.work.runtime.ktx` در `build.gradle.kts` | ✅ **VERIFIED** |
 | **FIX-003** | 2026-08-29 | AndroidX not enabled + OutOfMemoryError + Wrapper missing + namespace mismatch | gradle.properties نبود، تنظیمات در wrapper بودند، namespace≠پکیج | ایجاد gradle.properties، پاکسازی wrapper، تفکیک namespace/applicationId | ✅ **VERIFIED** |
@@ -21,6 +21,7 @@
 | **FIX-009** | 2026-08-29 | کرش یا خطای پارس پس از لاگین | عدم تطابق کلیدهای tenant_id/tenantId و فیلدهای غیر Nullable | افزودن tenant_id و tenantId در روت و DTOها + نال‌سیفی SharedPreferences + تفکیک خطاها | ✅ **VERIFIED** |
 | **FIX-010** | 2026-08-29 | عدم تطابق برخی مسیرهای API اپ با بک‌اند | تفاوت نام فیلدها و مسیرهای ثبت رویداد و والدین | تطبیق کامل روت‌های راننده و والدین + پاس شدن ۱۰۰٪ تست قرارداد Order 86 | ✅ **VERIFIED** |
 | **FIX-011** | 2026-08-29 | تضمین رندر مانیفست و تایملاین در سرور زنده | نیاز به داده‌های داینامیک و نشان بیلد زنده | افزودن `build: FIX-011` به `/health/live` + به‌روزرسانی برچسب نسخه UI + راهنمای ری‌استارت بعد git pull | ✅ **VERIFIED** |
+| **FIX-012** | 2026-08-29 | دید کامل به درخواست‌های ارسالی از گوشی + خطای 404 در درخواست با شناسه شیفت نامعتبر | ارسال پیش‌فرض `shift-active-1` که در دیتابیس نبود + نبود لاگ درخواست‌های ناشناس | هوک‌های `onRequest/onResponse` و `setNotFoundHandler` در Fastify با تگ `[404-MISS]` + نال‌سیف کردن `shiftId` در مانیفست + نمایش آدرس دقیق خطا در UI | ✅ **VERIFIED** |
 
 ---
 
